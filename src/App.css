@@ -1,0 +1,115 @@
+/* 1. Box sizing reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 2. Remove default margin */
+* {
+  margin: 0;
+}
+
+/* 3. Enable smooth scrolling (optional) */
+html:focus-within {
+  scroll-behavior: smooth;
+}
+
+/* 4. Full height layout */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* 5. Body defaults */
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: #0f1113;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* 6. Media elements behave correctly */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* 7. Form elements inherit font */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* 8. Avoid text overflow issues */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+/* 9. Remove list styles (optional) */
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+/* 10. Anchor defaults */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 11. Button reset */
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+/* 12. Root stacking context */
+#root {
+  isolation: isolate;
+}
+
+/*------------------------------Mapbox------------------------------------------*/
+.mapboxgl-ctrl-logo {
+  display: none !important;
+}
+
+.aircraft-popup .mapboxgl-popup-content {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.aircraft-popup .mapboxgl-popup-tip {
+  border-top-color: #1d1f20;
+}
+
+.aircraft-popup.anchor-top .mapboxgl-popup-tip,
+.aircraft-popup.mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
+  border-bottom-color: #1d1f20;
+  border-top-color: transparent;
+}
+
+.aircraft-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+  border-top-color: #1d1f20;
+  border-bottom-color: transparent;
+}
+
