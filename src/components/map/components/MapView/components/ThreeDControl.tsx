@@ -57,7 +57,8 @@ const ThreeDControl = () => {
             borderRadius: "8px",
             color: theme.palette.text.secondary,
             "&:hover": {
-              backgroundColor: `${theme.palette.text.primary} !important`,
+              backgroundColor: `${theme.palette.primary.main} !important`,
+              color: "white",
             },
             boxShadow: 1,
             // Add a smooth transition for the icon itself if you want a visual flip

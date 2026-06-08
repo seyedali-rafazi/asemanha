@@ -10,6 +10,10 @@ import {
   useTheme,
 } from "@mui/material";
 import { useState, type FC, type ReactNode } from "react";
+import {
+  getMapToolAccordionButtonSx,
+  getMapToolButtonSx,
+} from "../../map/utils/mapToolButtonStyles";
 
 interface ExpandableBoxProps {
   children: ReactNode;
@@ -43,18 +47,10 @@ const ExpandableBox: FC<ExpandableBoxProps> = ({
         <IconButton
           onClick={() => setExpanded(!expanded)}
           sx={{
-            width: 48,
-            height: 48,
-            borderRadius: 0,
+            ...getMapToolAccordionButtonSx(theme, { expanded, size: 48 }),
             display: "flex",
             flexDirection: "column",
             gap: 0.25,
-            // Slight background change when open to indicate active state
-            color: "text.secondary",
-            backgroundColor: expanded ? "action.selected" : "transparent",
-            "&:hover": {
-              backgroundColor: `${theme.palette.text.primary} !important`,
-            },
           }}
         >
           {accordionIcon}
@@ -91,12 +87,7 @@ const ExpandableBox: FC<ExpandableBoxProps> = ({
           <IconButton
             size="small"
             onClick={() => setExpanded(false)}
-            sx={{
-              color: theme.palette.common.white,
-              "&:hover": {
-                backgroundColor: `${theme.palette.text.primary} !important`,
-              },
-            }}
+            sx={getMapToolButtonSx(theme, false)}
           >
             <KeyboardArrowUpIcon fontSize="small" />
           </IconButton>

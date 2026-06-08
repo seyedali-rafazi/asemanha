@@ -5,15 +5,12 @@ import {
   Route as RouteIcon,
   Settings,
 } from "@mui/icons-material";
-import {
-  Box,
-  createTheme,
-  CssBaseline,
-  ThemeProvider,
-  Typography,
-} from "@mui/material";
+import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Provider } from "react-redux";
 import { Toaster } from "sonner";
+import { store } from "./store";
+import SettingsPanel from "./pages/Settings/SettingsPanel";
 import { SidebarProvider } from "./components/utils/Sidebar/SidebarProvider";
 import TracksPanel from "./pages/Home/components/AircraftLayer/components/TracksPanel/TracksPanel";
 import { AircraftProvider } from "./pages/Home/components/AircraftLayer/context/AircraftContext";
@@ -52,17 +49,6 @@ const theme = createTheme({
   },
 });
 
-const SettingComponent = () => (
-  <Box>
-    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-      Manage your account and preferences.
-    </Typography>
-    <Typography variant="body2" color="text.secondary">
-      Profile, Theme, and Language...
-    </Typography>
-  </Box>
-);
-
 // --- The Sidebar Configuration ---
 const sidebarConfig = [
   {
@@ -96,7 +82,7 @@ const sidebarConfig = [
   {
     id: "setting",
     textButton: "Setting",
-    component: <SettingComponent />,
+    component: <SettingsPanel />,
     position: "bottom",
     icon: <Settings />,
   },
@@ -109,17 +95,19 @@ export default function App() {
       <Toaster richColors position="top-right" />
       <CssBaseline />
       <ThemeProvider theme={theme}>
-        <AircraftProvider>
-          <MapLayersProvider>
-            <SidebarProvider config={sidebarConfig}>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/airplane" element={<AircraftListPage />} />
-                <Route path="/airplane/:id" element={<AircraftDetailPage />} />
-              </Routes>
-            </SidebarProvider>
-          </MapLayersProvider>
-        </AircraftProvider>
+        <Provider store={store}>
+          <AircraftProvider>
+            <MapLayersProvider>
+              <SidebarProvider config={sidebarConfig}>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/airplane" element={<AircraftListPage />} />
+                  <Route path="/airplane/:id" element={<AircraftDetailPage />} />
+                </Routes>
+              </SidebarProvider>
+            </MapLayersProvider>
+          </AircraftProvider>
+        </Provider>
       </ThemeProvider>
     </BrowserRouter>
   );

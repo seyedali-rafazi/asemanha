@@ -50,7 +50,8 @@ const CompassControl = () => {
             backgroundColor: "transparent",
             transition: "background-color 0.2s ease, border-radius 0.2s ease", // Exclude transform so the rotation is smooth
             "&:hover": {
-              backgroundColor: `${theme.palette.text.primary} !important`,
+              backgroundColor: `${theme.palette.primary.main} !important`,
+              color: "white",
               borderRadius: "24px",
             },
           }}

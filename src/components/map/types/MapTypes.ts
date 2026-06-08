@@ -4,6 +4,9 @@ export type MapTool =
   | "locateUser"
   | "boxZoom"
   | "draw"
+  | "marker"
+  | "line"
+  | "freedraw"
   | "extra"
   | "view"
   | null;

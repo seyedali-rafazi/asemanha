@@ -58,7 +58,8 @@ const FullscreenControl = () => {
             borderRadius: "8px",
             color: theme.palette.text.secondary,
             "&:hover": {
-              backgroundColor: `${theme.palette.text.primary} !important`,
+              backgroundColor: `${theme.palette.primary.main} !important`,
+              color: "white",
             },
             boxShadow: 1,
           }}

@@ -23,8 +23,8 @@ const RulerButton = ({ isRulerMode, setIsRulerMode }) => {
           boxShadow: 1,
           transition: "all 0.2s ease",
           "&:hover": {
-            backgroundColor: `${theme.palette.text.primary} !important`,
-            color: "white",
+            backgroundColor: `${theme.palette.primary.main} !important`,
+              color: "white",
           },
         }}
       >

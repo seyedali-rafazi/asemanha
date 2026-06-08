@@ -4,13 +4,14 @@ import type { Antenna } from "../types/Antenna";
 interface CreateAntennaLayerOptions {
   onAntennaClick?: (antenna: Antenna) => void;
   onAntennaHover?: (antenna: Antenna | null) => void;
+  pickable?: boolean;
 }
 
 export function createAntennaLayer(
   data: Antenna[],
   options: CreateAntennaLayerOptions = {}
 ) {
-  const { onAntennaClick, onAntennaHover } = options;
+  const { onAntennaClick, onAntennaHover, pickable = true } = options;
 
   const antennaSVG = `
   <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
@@ -28,7 +29,7 @@ export function createAntennaLayer(
   return new IconLayer({
     id: "antenna-icon-layer",
     data,
-    pickable: true,
+    pickable,
     iconAtlas: iconUrl,
     iconMapping: {
       antenna: { x: 0, y: 0, width: 100, height: 100, anchorX: 50, anchorY: 50 },

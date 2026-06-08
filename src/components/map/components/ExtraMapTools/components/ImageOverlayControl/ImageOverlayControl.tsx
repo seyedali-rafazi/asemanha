@@ -33,7 +33,7 @@ const ImageOverlayControl = () => {
               ? theme.palette.primary.main
               : "transparent",
             "&:hover": {
-              backgroundColor: `${theme.palette.text.primary} !important`,
+              backgroundColor: `${theme.palette.primary.main} !important`,
               color: "white",
             },
             boxShadow: 1,

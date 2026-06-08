@@ -25,7 +25,7 @@ const FlyHome = () => {
             backgroundColor: "transparent",
             transition: "all 0.2s ease",
             "&:hover": {
-              backgroundColor: `${theme.palette.text.primary} !important`,
+              backgroundColor: `${theme.palette.primary.main} !important`,
               color: "white",
               transform: "scale(1.1)",
               borderRadius: "24px",

@@ -1,9 +1,28 @@
-// src/components/ExpandableToolbar/components/DrawLineControl/LineButton.jsx
 import { Gesture } from "@mui/icons-material";
 import { IconButton, Tooltip, useTheme } from "@mui/material";
+import type { Dispatch, SetStateAction } from "react";
+import { getMapToolButtonSx } from "../../../../../utils/mapToolButtonStyles";
+import type { MapTool } from "../../../../../types/MapTypes";
 
-const FreeDrawButton = ({ isDrawingMode, setIsDrawingMode }) => {
+interface FreeDrawButtonProps {
+  isDrawingMode: boolean;
+  setIsDrawingMode: Dispatch<SetStateAction<boolean>>;
+  setActiveTool: Dispatch<SetStateAction<MapTool>>;
+}
+
+const FreeDrawButton = ({
+  isDrawingMode,
+  setIsDrawingMode,
+  setActiveTool,
+}: FreeDrawButtonProps) => {
   const theme = useTheme();
+
+  const handleToggle = () => {
+    const next = !isDrawingMode;
+    setIsDrawingMode(next);
+    setActiveTool(next ? "freedraw" : null);
+  };
+
   return (
     <Tooltip
       title={isDrawingMode ? "Stop Drawing" : "Free Draw Line"}
@@ -11,23 +30,9 @@ const FreeDrawButton = ({ isDrawingMode, setIsDrawingMode }) => {
       arrow
     >
       <IconButton
-        onClick={() => setIsDrawingMode(!isDrawingMode)}
+        onClick={handleToggle}
         size="medium"
-        sx={{
-          width: 36,
-          height: 36,
-          borderRadius: "8px",
-          color: isDrawingMode ? "white" : "text.secondary",
-          backgroundColor: isDrawingMode
-            ? theme.palette.primary.main
-            : "transparent",
-          boxShadow: 1,
-          transition: "all 0.2s ease",
-          "&:hover": {
-            backgroundColor: `${theme.palette.text.primary} !important`,
-            color: "white",
-          },
-        }}
+        sx={getMapToolButtonSx(theme, isDrawingMode)}
       >
         <Gesture fontSize="small" />
       </IconButton>

@@ -1,6 +1,7 @@
 import { Timeline } from "@mui/icons-material";
 import { IconButton, Tooltip, useTheme } from "@mui/material";
 import type { FC } from "react";
+import { getMapToolButtonSx } from "../../../../../utils/mapToolButtonStyles";
 
 interface LineButtonProps {
   isDrawingLine: boolean;
@@ -26,21 +27,7 @@ const LineButton: FC<LineButtonProps> = ({
       <IconButton
         onClick={() => setIsDrawingLine(!isDrawingLine)}
         size="medium"
-        sx={{
-          width: 36,
-          height: 36,
-          borderRadius: "8px",
-          color: isDrawingLine ? "white" : "text.secondary",
-          backgroundColor: isDrawingLine
-            ? theme.palette.primary.main
-            : "transparent",
-          boxShadow: 1,
-          transition: "all 0.2s ease",
-          "&:hover": {
-            backgroundColor: `${theme.palette.text.primary} !important`,
-            color: "white",
-          },
-        }}
+        sx={getMapToolButtonSx(theme, isDrawingLine)}
       >
         <Timeline fontSize="small" />
       </IconButton>

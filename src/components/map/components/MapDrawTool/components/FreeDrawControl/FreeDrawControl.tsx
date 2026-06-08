@@ -18,6 +18,7 @@ const FreeDrawControl: React.FC<ToolProps> = ({
       <FreeDrawButton
         isDrawingMode={isDrawingMode}
         setIsDrawingMode={setIsDrawingMode}
+        setActiveTool={setActiveTool}
       />
 
       {/* Renders the color/thickness settings if drawing mode is active */}

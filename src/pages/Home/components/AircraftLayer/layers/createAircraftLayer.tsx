@@ -1,16 +1,26 @@
-import { IconLayer } from "@deck.gl/layers";
+import { IconLayer, TextLayer } from "@deck.gl/layers";
+import type { Layer } from "@deck.gl/core";
 import type { Aircraft } from "../types/Aircraft";
 
 interface CreateAircraftLayerOptions {
   onAircraftClick?: (aircraft: Aircraft) => void;
   onAircraftHover?: (aircraft: Aircraft | null) => void;
+  iconSize?: number;
+  showAltitude?: boolean;
+  pickable?: boolean;
 }
 
 export function createAircraftIconLayer(
   data: Aircraft[],
   options: CreateAircraftLayerOptions = {}
 ) {
-  const { onAircraftClick, onAircraftHover } = options;
+  const {
+    onAircraftClick,
+    onAircraftHover,
+    iconSize = 30,
+    showAltitude = true,
+    pickable = true,
+  } = options;
 
   const aircraftSVG = `
   <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
@@ -63,42 +73,66 @@ export function createAircraftIconLayer(
     "data:image/svg+xml;charset=utf-8," +
     encodeURIComponent(aircraftSVG.trim());
 
-  return new IconLayer({
-    id: "aircraft-icon-layer",
-    data,
-    pickable: true,
-    iconAtlas: iconUrl,
-    iconMapping: {
-      plane: {
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100,
-        anchorX: 50,
-        anchorY: 50,
+  const layers: Layer[] = [
+    new IconLayer({
+      id: "aircraft-icon-layer",
+      data,
+      pickable,
+      iconAtlas: iconUrl,
+      iconMapping: {
+        plane: {
+          x: 0,
+          y: 0,
+          width: 100,
+          height: 100,
+          anchorX: 50,
+          anchorY: 50,
+        },
       },
-    },
-    getIcon: () => "plane",
-    getPosition: (d) => [d.lon, d.lat, d.altitude_ft],
-    sizeUnits: "pixels",
-    getSize: 30,
-    getAngle: (d) => -(d.heading_deg || 0),
-    billboard: false,
-    autoHighlight: true,
-    highlightColor: [242, 250, 10, 200],
-    onHover: (info) => {
-      if (onAircraftHover) {
-        onAircraftHover((info.object as Aircraft) ?? null);
-      }
-    },
-    onClick: (info, event) => {
-      if (info.object && onAircraftClick) {
-        onAircraftClick(info.object as Aircraft);
-      }
-      if (event?.srcEvent) {
-        event.srcEvent.stopPropagation();
-      }
-      return true;
-    },
-  });
+      getIcon: () => "plane",
+      getPosition: (d) => [d.lon, d.lat, d.altitude_ft],
+      sizeUnits: "pixels",
+      getSize: iconSize,
+      getAngle: (d) => -(d.heading_deg || 0),
+      billboard: false,
+      autoHighlight: true,
+      highlightColor: [242, 250, 10, 200],
+      onHover: (info) => {
+        if (onAircraftHover) {
+          onAircraftHover((info.object as Aircraft) ?? null);
+        }
+      },
+      onClick: (info, event) => {
+        if (info.object && onAircraftClick) {
+          onAircraftClick(info.object as Aircraft);
+        }
+        if (event?.srcEvent) {
+          event.srcEvent.stopPropagation();
+        }
+        return true;
+      },
+    }),
+  ];
+
+  if (showAltitude) {
+    layers.push(
+      new TextLayer({
+        id: "aircraft-altitude-layer",
+        data,
+        pickable: false,
+        getPosition: (d) => [d.lon, d.lat, d.altitude_ft],
+        getText: (d) => `${d.altitude_ft.toLocaleString()} ft`,
+        getSize: 12,
+        getColor: [255, 255, 255, 230],
+        getPixelOffset: [0, -(iconSize / 2 + 10)],
+        fontFamily: "system-ui, sans-serif",
+        fontWeight: 600,
+        outlineWidth: 2,
+        outlineColor: [15, 17, 19, 200],
+        billboard: true,
+      })
+    );
+  }
+
+  return layers;
 }

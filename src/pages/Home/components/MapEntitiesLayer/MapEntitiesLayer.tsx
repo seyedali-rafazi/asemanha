@@ -13,11 +13,21 @@ import { createAntennaLayer } from "../AntennaLayer/layers/createAntennaLayer";
 import type { Antenna } from "../AntennaLayer/types/Antenna";
 import { useMapLayers } from "../../context/MapLayersContext";
 import { useStableMapCursor } from "../../hooks/useStableMapCursor";
+import { useAppSelector } from "../../../../store/hooks";
+import {
+  isDrawToolActive,
+  useMapTool,
+} from "../../../../components/map/context/MapToolContext";
 
 const MapEntitiesLayer = () => {
   const { isItemVisible, selectEntity } = useMapLayers();
   const { tracks } = useAircraft();
   const handleHover = useStableMapCursor("map-entities");
+  const { airplaneSize, showAirplaneAltitude, mapStyleId } = useAppSelector(
+    (state) => state.settings
+  );
+  const { activeTool } = useMapTool();
+  const pickable = !isDrawToolActive(activeTool);
 
   const visibleAirplanes = useMemo(
     () =>
@@ -78,6 +88,7 @@ const MapEntitiesLayer = () => {
         createAirportLayer(visibleAirports, {
           onAirportClick: handleAirportClick,
           onAirportHover: handleHover,
+          pickable,
         })
       );
     }
@@ -87,15 +98,19 @@ const MapEntitiesLayer = () => {
         createAntennaLayer(visibleAntennas, {
           onAntennaClick: handleAntennaClick,
           onAntennaHover: handleHover,
+          pickable,
         })
       );
     }
 
     if (visibleAirplanes.length > 0) {
       result.push(
-        createAircraftIconLayer(visibleAirplanes, {
+        ...createAircraftIconLayer(visibleAirplanes, {
           onAircraftClick: handleAircraftClick,
           onAircraftHover: handleHover,
+          iconSize: airplaneSize,
+          showAltitude: showAirplaneAltitude,
+          pickable,
         })
       );
     }
@@ -110,9 +125,14 @@ const MapEntitiesLayer = () => {
     handleAirportClick,
     handleAntennaClick,
     handleHover,
+    airplaneSize,
+    showAirplaneAltitude,
+    pickable,
+    activeTool,
+    mapStyleId,
   ]);
 
-  return <DeckGLOverlay layers={layers} />;
+  return <DeckGLOverlay key={mapStyleId} layers={layers} />;
 };
 
 export default MapEntitiesLayer;

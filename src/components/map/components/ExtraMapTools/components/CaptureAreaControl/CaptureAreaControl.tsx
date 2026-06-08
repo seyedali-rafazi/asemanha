@@ -215,7 +215,8 @@ const CaptureAreaControl = () => {
               boxShadow: 1,
               color: "text.secondary",
               "&:hover": {
-                backgroundColor: `${theme.palette.text.primary} !important`,
+                backgroundColor: `${theme.palette.primary.main} !important`,
+              color: "white",
                 borderRadius: "24px",
               },
             }}

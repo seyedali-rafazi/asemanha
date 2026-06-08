@@ -100,9 +100,10 @@ const LineModal: FC<LineModalProps> = ({ isDrawingLine, setIsDrawingLine }) => {
           "line-cap": "round",
         },
         paint: {
-          "line-color": "#ff9800",
-          "line-width": 3,
-          "line-dasharray": [2, 2],
+          "line-color": "#ff5722",
+          "line-width": 6,
+          "line-opacity": 0.95,
+          "line-dasharray": [3, 2],
         },
       });
     }
@@ -196,11 +197,16 @@ const LineModal: FC<LineModalProps> = ({ isDrawingLine, setIsDrawingLine }) => {
   useEffect(() => {
     if (!map) return;
 
+    const onStyleLoad = () => {
+      initMapLayers();
+      updateCompletedLinesSource();
+    };
+
     if (map.isStyleLoaded()) {
       initMapLayers();
     }
 
-    map.on("styledata", initMapLayers);
+    map.on("style.load", onStyleLoad);
 
     const handleMapClick = (e: any) => {
       if (!isDrawingLineRef.current && map.getLayer("custom-lines-layer")) {
@@ -270,14 +276,14 @@ const LineModal: FC<LineModalProps> = ({ isDrawingLine, setIsDrawingLine }) => {
     map.on("mouseleave", "custom-lines-layer", handleMouseLeave);
 
     return () => {
-      map.off("styledata", initMapLayers);
+      map.off("style.load", onStyleLoad);
       map.off("click", handleMapClick);
       map.off("mousemove", handleMapMouseMove);
       map.off("dblclick", handleMapDblClick);
       map.off("mouseenter", "custom-lines-layer", handleMouseEnter);
       map.off("mouseleave", "custom-lines-layer", handleMouseLeave);
     };
-  }, [map, initMapLayers, updateDraftLineSource, handleFinishDrawing]);
+  }, [map, initMapLayers, updateDraftLineSource, updateCompletedLinesSource, handleFinishDrawing]);
 
   const handleClose = () => {
     setOpen(false);

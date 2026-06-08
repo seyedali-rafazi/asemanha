@@ -4,13 +4,14 @@ import type { Airport } from "../types/Airport";
 interface CreateAirportLayerOptions {
   onAirportClick?: (airport: Airport) => void;
   onAirportHover?: (airport: Airport | null) => void;
+  pickable?: boolean;
 }
 
 export function createAirportLayer(
   data: Airport[],
   options: CreateAirportLayerOptions = {}
 ) {
-  const { onAirportClick, onAirportHover } = options;
+  const { onAirportClick, onAirportHover, pickable = true } = options;
 
   const airportSVG = `
   <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
@@ -26,7 +27,7 @@ export function createAirportLayer(
   return new IconLayer({
     id: "airport-icon-layer",
     data,
-    pickable: true,
+    pickable,
     iconAtlas: iconUrl,
     iconMapping: {
       airport: { x: 0, y: 0, width: 100, height: 100, anchorX: 50, anchorY: 50 },

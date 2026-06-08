@@ -44,13 +44,15 @@ const MarkerModal: FC<MarkerButtonProps> = ({
 
   const markersRef = useRef([]);
   const isDrawingRef = useRef(isDrawing);
+
   useEffect(() => {
-    if (activeTool) {
-      isDrawingRef.current = isDrawing;
-    } else {
-      isDrawingRef.current = null;
+    if (activeTool && activeTool !== "marker") {
       setIsDrawing(false);
     }
+  }, [activeTool, setIsDrawing]);
+
+  useEffect(() => {
+    isDrawingRef.current = isDrawing;
     if (map && map.getCanvas()) {
       map.getCanvas().style.cursor = isDrawing ? "crosshair" : "";
     }
@@ -80,9 +82,9 @@ const MarkerModal: FC<MarkerButtonProps> = ({
         layout: {
           "icon-image": ["get", "imageId"],
           "icon-allow-overlap": true,
-          "icon-anchor": "bottom", // <--- IMPORTANT: Anchors the bottom tip of the pin to the coordinate
+          "icon-anchor": "bottom",
           "text-field": ["get", "name"],
-          "text-offset": [0, 0.5], // Adjusted text so it sits below the bottom of the pin
+          "text-offset": [0, 0.5],
           "text-anchor": "top",
           "text-size": 14,
         },
@@ -95,14 +97,37 @@ const MarkerModal: FC<MarkerButtonProps> = ({
     }
   }, [map]);
 
+  const restoreMarkerImages = useCallback(() => {
+    if (!map || markersRef.current.length === 0) return;
+
+    markersRef.current.forEach((marker) => {
+      const svgString = generateMarkerSvg(marker);
+      const svgDataUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+        svgString
+      )}`;
+      const img = new Image(marker.size, marker.size);
+      img.onload = () => {
+        const imageId = `marker-img-${marker.id}`;
+        if (map.hasImage(imageId)) map.removeImage(imageId);
+        map.addImage(imageId, img);
+      };
+      img.src = svgDataUrl;
+    });
+  }, [map]);
+
   useEffect(() => {
     if (!map) return;
+
+    const onStyleLoad = () => {
+      initMapLayers();
+      restoreMarkerImages();
+    };
 
     if (map.isStyleLoaded()) {
       initMapLayers();
     }
 
-    map.on("styledata", initMapLayers);
+    map.on("style.load", onStyleLoad);
 
     const handleMapClick = (e) => {
       if (map.getLayer("custom-markers-layer")) {
@@ -150,12 +175,12 @@ const MarkerModal: FC<MarkerButtonProps> = ({
     map.on("mouseleave", "custom-markers-layer", handleMouseLeave);
 
     return () => {
-      map.off("styledata", initMapLayers);
+      map.off("style.load", onStyleLoad);
       map.off("click", handleMapClick);
       map.off("mouseenter", "custom-markers-layer", handleMouseEnter);
       map.off("mouseleave", "custom-markers-layer", handleMouseLeave);
     };
-  }, [map, initMapLayers]);
+  }, [map, initMapLayers, restoreMarkerImages]);
 
   const updateGeojsonSource = (currentMarkers) => {
     if (!map) return;
@@ -180,9 +205,10 @@ const MarkerModal: FC<MarkerButtonProps> = ({
   };
 
   const handleChange = (field) => (event) => {
-    let value = event.target.value;
+    const raw = event?.target?.value ?? event;
+    let value = raw;
     if (["lat", "lon", "size", "opacity"].includes(field)) {
-      value = Number(value);
+      value = Number(raw);
     }
     setMarkerData((prev) => ({ ...prev, [field]: value }));
   };

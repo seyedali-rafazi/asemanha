@@ -1,6 +1,5 @@
 import { Paper } from "@mui/material";
 import FullscreenControl from "./components/FullscreenControl";
-import ThreeDControl from "./components/ThreeDControl";
 
 const MapView = () => {
   return (
@@ -21,7 +20,6 @@ const MapView = () => {
       }}
     >
       <FullscreenControl />
-      <ThreeDControl />
     </Paper>
   );
 };

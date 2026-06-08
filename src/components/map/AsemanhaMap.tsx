@@ -9,17 +9,17 @@ import MapDrawTools from "./components/MapDrawTool/MapDrawTools";
 import ExtraMapTools from "./components/ExtraMapTools/ExtraMapTools";
 import MapView from "./components/MapView/MapView";
 import MapResizeHandler from "./components/MapResizeHandler/MapResizeHandler";
-import { useState, type FC, type ReactNode } from "react";
+import { useRef, useState, type FC, type ReactNode } from "react";
+import { useAppSelector } from "../../store/hooks";
+import { getMapStyleUrl } from "../../store/mapStyles";
+import MapFlatViewEnforcer from "./components/MapFlatViewEnforcer/MapFlatViewEnforcer";
+import MapStyleSynchronizer from "./components/MapStyleSynchronizer/MapStyleSynchronizer";
+import { MapToolProvider } from "./context/MapToolContext";
 import type { MapTool } from "./types/MapTypes";
-
-
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN ||
   import.meta.env.REACT_APP_MAPBOX_TOKEN;
-
-
-const BaladUrl = `https://tiles.raah.ir/dynamic/new_style_preview.json`;
 
 const ZOOM_BOX_POSITION = "top-left";
 const COORDINATE_POSITION = "bottom-left";
@@ -56,11 +56,18 @@ const MapboxMap: FC<MapboxMapProps> = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [activeTool, setActiveTool] = useState<MapTool>(null);
+  const mapStyleId = useAppSelector((state) => state.settings.mapStyleId);
+  const bootMapStyleRef = useRef<string | null>(null);
+  if (bootMapStyleRef.current === null) {
+    bootMapStyleRef.current = getMapStyleUrl(mapStyleId);
+  }
 
   const initialViewState = {
     longitude: 34,
     latitude: 37.7853,
     zoom: 2,
+    pitch: 0,
+    bearing: 0,
   };
 
   return (
@@ -75,10 +82,17 @@ const MapboxMap: FC<MapboxMapProps> = ({ children }) => {
       <Map
         initialViewState={initialViewState}
         mapboxAccessToken={MAPBOX_TOKEN}
-        mapStyle={BaladUrl}
+        mapStyle={bootMapStyleRef.current}
+        projection="mercator"
+        dragRotate={false}
+        pitchWithRotate={false}
+        touchPitch={false}
+        maxPitch={0}
         preserveDrawingBuffer={true}
         style={{ width: "100%", height: "100%" }}
       >
+        <MapFlatViewEnforcer />
+        <MapStyleSynchronizer />
         <MapResizeHandler />
         {/* ✅ Mapbox-native Dark Shadow Layer */}
         {/* This creates the shadow INSIDE the map context, allowing your Deck.gl layer to sit on top */}
@@ -96,8 +110,9 @@ const MapboxMap: FC<MapboxMapProps> = ({ children }) => {
           />
         </Source>
 
-        {/* ✅ Children (AircraftLayer) will now render natively above or below Mapbox layers based on its configuration, not blocked by HTML */}
-        {children}
+        <MapToolProvider activeTool={activeTool}>
+          {children}
+        </MapToolProvider>
 
         {/* Map Controls */}
         <MapControlBox position={ZOOM_BOX_POSITION}>
