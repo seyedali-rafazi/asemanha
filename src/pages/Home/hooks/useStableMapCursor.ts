@@ -1,5 +1,17 @@
+import type { Map as MapboxMap } from "mapbox-gl";
 import { useCallback, useEffect, useRef } from "react";
 import { useMap } from "react-map-gl/mapbox";
+
+function isMapAlive(map: MapboxMap | undefined | null): map is MapboxMap {
+  return Boolean(map && !(map as { _removed?: boolean })._removed);
+}
+
+function setMapCursor(map: MapboxMap, cursor: string) {
+  if (!isMapAlive(map)) return;
+  const canvas = map.getCanvas();
+  if (!canvas?.style) return;
+  canvas.style.cursor = cursor;
+}
 
 export function useStableMapCursor(layerId: string) {
   const { current: mapRef } = useMap();
@@ -9,7 +21,7 @@ export function useStableMapCursor(layerId: string) {
   const handleHover = useCallback(
     (item: { id: string } | null) => {
       const map = mapRef?.getMap();
-      if (!map) return;
+      if (!isMapAlive(map)) return;
 
       const nextId = item?.id ?? null;
 
@@ -22,13 +34,13 @@ export function useStableMapCursor(layerId: string) {
 
       if (nextId) {
         hoveredIdRef.current = nextId;
-        map.getCanvas().style.cursor = "pointer";
+        setMapCursor(map, "pointer");
         return;
       }
 
       leaveTimerRef.current = window.setTimeout(() => {
         hoveredIdRef.current = null;
-        map.getCanvas().style.cursor = "";
+        setMapCursor(map, "");
         leaveTimerRef.current = null;
       }, 80);
     },
@@ -39,11 +51,9 @@ export function useStableMapCursor(layerId: string) {
     return () => {
       if (leaveTimerRef.current) {
         window.clearTimeout(leaveTimerRef.current);
+        leaveTimerRef.current = null;
       }
-      const map = mapRef?.getMap();
-      if (map) {
-        map.getCanvas().style.cursor = "";
-      }
+      setMapCursor(mapRef?.getMap(), "");
     };
   }, [mapRef, layerId]);
 

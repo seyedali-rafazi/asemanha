@@ -3,6 +3,13 @@ import { useEffect, useRef } from "react";
 import { useMap } from "react-map-gl/mapbox";
 
 function resizeMap(map: MapboxMap) {
+  if ((map as { _removed?: boolean })._removed) return;
+
+  const container = map.getContainer();
+  if (!container || container.clientWidth === 0 || container.clientHeight === 0) {
+    return;
+  }
+
   map.resize();
 }
 
@@ -21,23 +28,16 @@ export default function MapResizeHandler() {
       debounceRef.current = window.setTimeout(() => {
         resizeMap(map);
         debounceRef.current = null;
-      }, 50);
+      }, 150);
     };
 
-    const container = map.getContainer();
-    const observer = new ResizeObserver(scheduleResize);
-    observer.observe(container);
-
-    const handleSidebarResize = () => scheduleResize();
-    window.addEventListener("sidebar-resize", handleSidebarResize);
-    window.addEventListener("resize", handleSidebarResize);
+    window.addEventListener("resize", scheduleResize);
 
     return () => {
-      observer.disconnect();
-      window.removeEventListener("sidebar-resize", handleSidebarResize);
-      window.removeEventListener("resize", handleSidebarResize);
+      window.removeEventListener("resize", scheduleResize);
       if (debounceRef.current) {
         window.clearTimeout(debounceRef.current);
+        debounceRef.current = null;
       }
     };
   }, [mapRef]);

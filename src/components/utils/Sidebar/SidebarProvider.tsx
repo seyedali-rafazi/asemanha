@@ -13,6 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 export const COLLAPSED_WIDTH = 72;
 export const EXPANDED_WIDTH = 360;
+const PANEL_WIDTH = EXPANDED_WIDTH - COLLAPSED_WIDTH;
 
 const SidebarContext = createContext(null);
 
@@ -30,8 +31,6 @@ export const SidebarProvider = ({ children, config }) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeComponentId, setActiveComponentId] = useState(null);
-
-  const sidebarWidth = isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
 
   const openSidebar = (id) => {
     const item = config.find((i) => i.id === id);
@@ -74,7 +73,11 @@ export const SidebarProvider = ({ children, config }) => {
     <List sx={{ px: 0.75 }}>
       {items.map((item) => {
         const isActive =
-          activeComponentId === item.id || location.pathname === item.navigate;
+          activeComponentId === item.id ||
+          location.pathname === item.navigate ||
+          (item.navigate &&
+            item.navigate !== "/" &&
+            location.pathname.startsWith(item.navigate));
 
         return (
           <ListItem key={item.id} disablePadding sx={{ display: "block", mb: 0.5 }}>
@@ -127,7 +130,7 @@ export const SidebarProvider = ({ children, config }) => {
     <SidebarContext.Provider
       value={{
         isExpanded,
-        sidebarWidth,
+        sidebarWidth: COLLAPSED_WIDTH,
         activeComponentId,
         openSidebar,
         closeSidebar,
@@ -136,35 +139,27 @@ export const SidebarProvider = ({ children, config }) => {
     >
       <Box sx={{ display: "flex", height: "100vh", width: "100vw", overflow: "hidden" }}>
         <Box
-          onTransitionEnd={(e) => {
-            if (e.propertyName === "width") {
-              window.dispatchEvent(new Event("sidebar-resize"));
-            }
-          }}
           sx={{
-            width: sidebarWidth,
+            width: COLLAPSED_WIDTH,
             flexShrink: 0,
             height: "100%",
-            display: "flex",
-            flexDirection: "row",
-            bgcolor: "#16181a",
-            borderRight: "1px solid",
-            borderColor: "rgba(255, 255, 255, 0.08)",
-            transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            overflow: "hidden",
+            position: "relative",
+            zIndex: 1400,
           }}
         >
           <Box
             sx={{
+              position: "relative",
+              zIndex: 2,
               width: COLLAPSED_WIDTH,
               height: "100%",
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
-              flexShrink: 0,
               py: 2,
+              bgcolor: "#16181a",
               borderRight: "1px solid",
-              borderColor: "rgba(255, 255, 255, 0.06)",
+              borderColor: "rgba(255, 255, 255, 0.08)",
             }}
           >
             <Box>{renderList(topItems)}</Box>
@@ -173,16 +168,22 @@ export const SidebarProvider = ({ children, config }) => {
 
           <Box
             sx={{
-              width: EXPANDED_WIDTH - COLLAPSED_WIDTH,
-              height: "100%",
-              flexShrink: 0,
+              position: "fixed",
+              left: COLLAPSED_WIDTH,
+              top: 0,
+              width: PANEL_WIDTH,
+              height: "100vh",
+              zIndex: 1,
               display: "flex",
               flexDirection: "column",
               bgcolor: "#1a1d1f",
-              opacity: isExpanded ? 1 : 0,
-              transform: isExpanded ? "translateX(0)" : "translateX(-12px)",
+              borderRight: "1px solid",
+              borderColor: "rgba(255, 255, 255, 0.08)",
+              boxShadow: isExpanded ? "8px 0 32px rgba(0,0,0,0.45)" : "none",
+              transform: isExpanded ? "translateX(0)" : `translateX(-${PANEL_WIDTH}px)`,
+              visibility: isExpanded ? "visible" : "hidden",
               transition:
-                "opacity 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, visibility 0.3s",
               pointerEvents: isExpanded ? "auto" : "none",
               overflow: "hidden",
             }}
@@ -201,11 +202,7 @@ export const SidebarProvider = ({ children, config }) => {
                     flexShrink: 0,
                   }}
                 >
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={700}
-                    color="text.primary"
-                  >
+                  <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                     {activeItem.textButton}
                   </Typography>
                   <IconButton

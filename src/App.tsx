@@ -19,8 +19,9 @@ import TracksPanel from "./pages/Home/components/AircraftLayer/components/Tracks
 import { AircraftProvider } from "./pages/Home/components/AircraftLayer/context/AircraftContext";
 import LayersPanel from "./pages/Home/components/LayersPanel/LayersPanel";
 import { MapLayersProvider } from "./pages/Home/context/MapLayersContext";
+import AircraftDetailPage from "./pages/Aircraft/AircraftDetailPage";
+import AircraftListPage from "./pages/Aircraft/AircraftListPage";
 import HomePage from "./pages/Home/Home";
-import ShopPage from "./pages/Shop/Shop";
 
 // ✅ Custom MUI Theme
 const theme = createTheme({
@@ -113,7 +114,8 @@ export default function App() {
             <SidebarProvider config={sidebarConfig}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/airplane" element={<ShopPage />} />
+                <Route path="/airplane" element={<AircraftListPage />} />
+                <Route path="/airplane/:id" element={<AircraftDetailPage />} />
               </Routes>
             </SidebarProvider>
           </MapLayersProvider>

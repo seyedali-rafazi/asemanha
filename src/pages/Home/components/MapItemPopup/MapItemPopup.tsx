@@ -250,7 +250,9 @@ export default function MapItemPopup() {
     }, 150);
 
     const map = mapRef?.getMap();
-    if (!map) return () => window.clearTimeout(timer);
+    if (!map || (map as { _removed?: boolean })._removed) {
+      return () => window.clearTimeout(timer);
+    }
 
     const handleMapClick = () => {
       if (skipCloseRef.current) return;
@@ -260,7 +262,9 @@ export default function MapItemPopup() {
     map.on("click", handleMapClick);
     return () => {
       window.clearTimeout(timer);
-      map.off("click", handleMapClick);
+      if (!(map as { _removed?: boolean })._removed) {
+        map.off("click", handleMapClick);
+      }
     };
   }, [selectedEntity, mapRef, selectEntity]);
 

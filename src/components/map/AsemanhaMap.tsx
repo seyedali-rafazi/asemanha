@@ -12,7 +12,11 @@ import MapResizeHandler from "./components/MapResizeHandler/MapResizeHandler";
 import { useState, type FC, type ReactNode } from "react";
 import type { MapTool } from "./types/MapTypes";
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
+
+const MAPBOX_TOKEN =
+  import.meta.env.VITE_MAPBOX_TOKEN ||
+  import.meta.env.REACT_APP_MAPBOX_TOKEN;
 
 
 const BaladUrl = `https://tiles.raah.ir/dynamic/new_style_preview.json`;

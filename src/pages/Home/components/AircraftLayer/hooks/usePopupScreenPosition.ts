@@ -15,7 +15,7 @@ export function usePopupScreenPosition(
 
   const updatePosition = useCallback(() => {
     const map = mapRef?.getMap();
-    if (!map || !lonLat) {
+    if (!map || (map as { _removed?: boolean })._removed || !lonLat) {
       setPosition(null);
       return;
     }
@@ -33,13 +33,14 @@ export function usePopupScreenPosition(
     updatePosition();
 
     const map = mapRef?.getMap();
-    if (!map) return;
+    if (!map || (map as { _removed?: boolean })._removed) return;
 
     map.on("move", updatePosition);
     map.on("zoom", updatePosition);
     map.on("resize", updatePosition);
 
     return () => {
+      if ((map as { _removed?: boolean })._removed) return;
       map.off("move", updatePosition);
       map.off("zoom", updatePosition);
       map.off("resize", updatePosition);
