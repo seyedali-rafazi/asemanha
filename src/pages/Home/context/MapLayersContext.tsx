@@ -3,10 +3,11 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import aircraftData from "../components/AircraftLayer/data/iran_aircraft_50.json";
+import { BASE_AIRCRAFT } from "../components/AircraftLayer/data/aircraftFleet";
 import airportData from "../components/AirportLayer/data/iran_airports.json";
 import antennaData from "../components/AntennaLayer/data/iran_antennas.json";
 import type { Aircraft } from "../components/AircraftLayer/types/Aircraft";
@@ -32,6 +33,8 @@ interface MapLayersContextValue {
   setSearchQuery: (category: LayerCategory, query: string) => void;
   selectedEntity: { category: LayerCategory; id: string } | null;
   selectEntity: (category: LayerCategory, id: string | null) => void;
+  focusRequest: { category: LayerCategory; id: string; nonce: number } | null;
+  focusEntity: (category: LayerCategory, id: string) => void;
   getEntityData: (category: LayerCategory, id: string) => MapEntity | null;
   getSelectedEntityData: () => MapEntity | null;
   airplanes: Aircraft[];
@@ -54,7 +57,7 @@ function buildDefaultVisibility(
 }
 
 export function MapLayersProvider({ children }: { children: ReactNode }) {
-  const airplanes = aircraftData as Aircraft[];
+  const airplanes = BASE_AIRCRAFT;
   const airports = airportData as Airport[];
   const antennas = antennaData as Antenna[];
 
@@ -81,6 +84,12 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
     category: LayerCategory;
     id: string;
   } | null>(null);
+  const [focusRequest, setFocusRequest] = useState<{
+    category: LayerCategory;
+    id: string;
+    nonce: number;
+  } | null>(null);
+  const focusNonceRef = useRef(0);
 
   const toggleCategory = useCallback((category: LayerCategory) => {
     setCategoryEnabled((prev) => ({
@@ -152,6 +161,16 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const focusEntity = useCallback(
+    (category: LayerCategory, id: string) => {
+      setSelectedEntity({ category, id });
+      setActiveCategory(category);
+      focusNonceRef.current += 1;
+      setFocusRequest({ category, id, nonce: focusNonceRef.current });
+    },
+    []
+  );
+
   const getSelectedEntityData = useCallback((): MapEntity | null => {
     if (!selectedEntity) return null;
     return getEntityData(selectedEntity.category, selectedEntity.id);
@@ -171,6 +190,8 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
       setSearchQuery,
       selectedEntity,
       selectEntity,
+      focusRequest,
+      focusEntity,
       getEntityData,
       getSelectedEntityData,
       airplanes,
@@ -189,6 +210,8 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
       setSearchQuery,
       selectedEntity,
       selectEntity,
+      focusRequest,
+      focusEntity,
       getEntityData,
       getSelectedEntityData,
       airplanes,

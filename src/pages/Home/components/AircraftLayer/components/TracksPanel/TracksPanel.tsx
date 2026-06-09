@@ -8,13 +8,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useMemo } from "react";
+import { BASE_AIRCRAFT } from "../../data/aircraftFleet";
 import { useAircraft } from "../../context/AircraftContext";
-import aircraftData from "../../data/iran_aircraft_50.json";
-import type { Aircraft } from "../../types/Aircraft";
 
 export default function TracksPanel() {
   const { tracks, toggleTrackVisibility, removeTrack } = useAircraft();
-  const data = aircraftData as Aircraft[];
+  const data = BASE_AIRCRAFT;
 
   const trackItems = useMemo(
     () =>

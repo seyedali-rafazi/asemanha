@@ -11,6 +11,7 @@ import { Provider } from "react-redux";
 import { Toaster } from "sonner";
 import { store } from "./store";
 import SettingsPanel from "./pages/Settings/SettingsPanel";
+import AppShell from "./components/layout/AppShell";
 import { SidebarProvider } from "./components/utils/Sidebar/SidebarProvider";
 import TracksPanel from "./pages/Home/components/AircraftLayer/components/TracksPanel/TracksPanel";
 import { AircraftProvider } from "./pages/Home/components/AircraftLayer/context/AircraftContext";
@@ -18,9 +19,7 @@ import LayersPanel from "./pages/Home/components/LayersPanel/LayersPanel";
 import { MapLayersProvider } from "./pages/Home/context/MapLayersContext";
 import AircraftDetailPage from "./pages/Aircraft/AircraftDetailPage";
 import AircraftListPage from "./pages/Aircraft/AircraftListPage";
-import HomePage from "./pages/Home/Home";
 
-// ✅ Custom MUI Theme
 const theme = createTheme({
   palette: {
     mode: "dark",
@@ -49,7 +48,6 @@ const theme = createTheme({
   },
 });
 
-// --- The Sidebar Configuration ---
 const sidebarConfig = [
   {
     id: "home",
@@ -88,7 +86,6 @@ const sidebarConfig = [
   },
 ];
 
-// --- Main App Root ---
 export default function App() {
   return (
     <BrowserRouter>
@@ -100,9 +97,11 @@ export default function App() {
             <MapLayersProvider>
               <SidebarProvider config={sidebarConfig}>
                 <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/airplane" element={<AircraftListPage />} />
-                  <Route path="/airplane/:id" element={<AircraftDetailPage />} />
+                  <Route element={<AppShell />}>
+                    <Route index element={null} />
+                    <Route path="airplane" element={<AircraftListPage />} />
+                    <Route path="airplane/:id" element={<AircraftDetailPage />} />
+                  </Route>
                 </Routes>
               </SidebarProvider>
             </MapLayersProvider>

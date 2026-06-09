@@ -24,9 +24,11 @@ import { useMemo, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import aircraftData from "../Home/components/AircraftLayer/data/iran_aircraft_50.json";
 import type { Aircraft } from "../Home/components/AircraftLayer/types/Aircraft";
-import { getAircraftImage } from "../Home/components/AircraftLayer/utils/getAircraftImage";
+import AircraftThumb from "../Home/components/AircraftLayer/components/AircraftThumb";
 
 const allAircraft = aircraftData as Aircraft[];
+const pageMuted = "rgba(255,255,255,0.55)";
+const pageText = "rgba(255,255,255,0.92)";
 
 function InfoBlock({
   icon,
@@ -53,11 +55,11 @@ function InfoBlock({
       >
         <Stack direction="row" alignItems="center" spacing={1} mb={0.75}>
           {icon}
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{ color: pageMuted }}>
             {label}
           </Typography>
         </Stack>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" fontWeight={700} sx={{ color: pageText }}>
           {value}
         </Typography>
       </Box>
@@ -108,14 +110,10 @@ export default function AircraftDetailPage() {
       }}
     >
       <Box sx={{ position: "relative", height: { xs: 220, md: 300 }, overflow: "hidden" }}>
-        <Box
-          component="img"
-          src={getAircraftImage(aircraft.aircraftType)}
-          alt={aircraft.aircraftType}
+        <AircraftThumb
+          aircraftType={aircraft.aircraftType}
+          iconSize={340}
           sx={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
             animation: "heroZoom 8s ease-out forwards",
             "@keyframes heroZoom": {
               from: { transform: "scale(1.1)" },
@@ -184,11 +182,11 @@ export default function AircraftDetailPage() {
             >
               <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
                 <Flight sx={{ color: "primary.main", fontSize: 20 }} />
-                <Typography variant="overline" color="text.secondary">
+                <Typography variant="overline" sx={{ color: pageMuted }}>
                   Route
                 </Typography>
               </Stack>
-              <Typography variant="h6" fontWeight={700}>
+              <Typography variant="h6" fontWeight={700} sx={{ color: pageText }}>
                 {aircraft.origin_city} → {aircraft.destination_city}
               </Typography>
             </Box>
@@ -203,7 +201,7 @@ export default function AircraftDetailPage() {
           </Stack>
         </Fade>
 
-        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5, color: pageText }}>
           Flight Telemetry
         </Typography>
         <Box
@@ -252,15 +250,15 @@ export default function AircraftDetailPage() {
           >
             <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
               <LocationOn sx={{ color: "primary.main" }} />
-              <Typography variant="subtitle2" fontWeight={700}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ color: pageText }}>
                 Current Position
               </Typography>
             </Stack>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant="body2" sx={{ color: pageMuted }} gutterBottom>
               Latitude: {aircraft.lat.toFixed(4)}° · Longitude: {aircraft.lon.toFixed(4)}°
             </Typography>
             <Divider sx={{ my: 1.5 }} />
-            <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+            <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ color: pageText }}>
               Flight Path Waypoints ({aircraft.path.length})
             </Typography>
             <Stack spacing={0.75} sx={{ mt: 1 }}>
@@ -274,7 +272,7 @@ export default function AircraftDetailPage() {
                       py: 0.75,
                       px: 1.5,
                       borderRadius: 1.5,
-                      bgcolor: "grey.A100",
+                      bgcolor: "rgba(255,255,255,0.06)",
                     }}
                   >
                     <Chip
@@ -288,7 +286,7 @@ export default function AircraftDetailPage() {
                         color: "#fff",
                       }}
                     />
-                    <Typography variant="body2">
+                    <Typography variant="body2" sx={{ color: pageText }}>
                       {point[0].toFixed(3)}°, {point[1].toFixed(3)}°
                     </Typography>
                   </Box>
@@ -307,7 +305,7 @@ export default function AircraftDetailPage() {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+            <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ color: pageText }}>
               Aircraft Details
             </Typography>
             <Stack spacing={1} sx={{ mt: 1.5 }}>
@@ -329,10 +327,10 @@ export default function AircraftDetailPage() {
                       i < 5 ? "1px solid rgba(255,255,255,0.06)" : "none",
                   }}
                 >
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" sx={{ color: pageMuted }}>
                     {label}
                   </Typography>
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2" fontWeight={600} sx={{ color: pageText }}>
                     {value}
                   </Typography>
                 </Box>

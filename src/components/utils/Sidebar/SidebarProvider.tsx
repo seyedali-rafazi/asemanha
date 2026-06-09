@@ -8,7 +8,7 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const COLLAPSED_WIDTH = 72;
@@ -32,35 +32,35 @@ export const SidebarProvider = ({ children, config }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeComponentId, setActiveComponentId] = useState(null);
 
-  const openSidebar = (id) => {
+  const openSidebar = useCallback((id) => {
     const item = config.find((i) => i.id === id);
     if (item && item.component) {
       setIsExpanded(true);
       setActiveComponentId(id);
     }
-  };
+  }, [config]);
 
-  const closeSidebar = () => {
+  const closeSidebar = useCallback(() => {
     setIsExpanded(false);
     setActiveComponentId(null);
-  };
+  }, []);
 
-  const toggleSidebar = (id) => {
+  const toggleSidebar = useCallback((id) => {
     if (isExpanded && activeComponentId === id) {
       closeSidebar();
     } else {
       openSidebar(id);
     }
-  };
+  }, [isExpanded, activeComponentId, closeSidebar, openSidebar]);
 
-  const handleSidebarClick = (item) => {
+  const handleSidebarClick = useCallback((item) => {
     if (item.navigate) {
       closeSidebar();
       navigate(item.navigate);
     } else if (item.component) {
       toggleSidebar(item.id);
     }
-  };
+  }, [closeSidebar, navigate, toggleSidebar]);
 
   const topItems = config.filter(
     (item) => item.position === "top" || !item.position
@@ -126,17 +126,20 @@ export const SidebarProvider = ({ children, config }) => {
     </List>
   );
 
+  const contextValue = useMemo(
+    () => ({
+      isExpanded,
+      sidebarWidth: COLLAPSED_WIDTH,
+      activeComponentId,
+      openSidebar,
+      closeSidebar,
+      toggleSidebar,
+    }),
+    [isExpanded, activeComponentId, openSidebar, closeSidebar, toggleSidebar]
+  );
+
   return (
-    <SidebarContext.Provider
-      value={{
-        isExpanded,
-        sidebarWidth: COLLAPSED_WIDTH,
-        activeComponentId,
-        openSidebar,
-        closeSidebar,
-        toggleSidebar,
-      }}
-    >
+    <SidebarContext.Provider value={contextValue}>
       <Box sx={{ display: "flex", height: "100vh", width: "100vw", overflow: "hidden" }}>
         <Box
           sx={{

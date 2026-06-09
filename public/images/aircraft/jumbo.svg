@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#101f35"/>
+      <stop offset="50%" stop-color="#274f86"/>
+      <stop offset="100%" stop-color="#74b5e8"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f7f9fc"/>
+      <stop offset="100%" stop-color="#d4dbe4"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#sky)"/>
+  <ellipse cx="300" cy="348" rx="285" ry="20" fill="rgba(0,0,0,0.24)"/>
+  <g transform="translate(35 125)">
+    <path d="M40 90 L510 90 L522 100 L510 110 L40 110 Z" fill="url(#body)" stroke="#8895a3" stroke-width="1.4"/>
+    <path d="M220 90 L265 28 L295 28 L250 90 Z" fill="#e4eaf0" stroke="#8895a3"/>
+    <path d="M90 90 L20 118 L12 130 L90 110 Z" fill="#ccd4dd" stroke="#8895a3"/>
+    <path d="M460 90 L530 118 L538 130 L460 110 Z" fill="#ccd4dd" stroke="#8895a3"/>
+    <path d="M130 90 L95 118 L100 125 L135 110 Z" fill="#ccd4dd" stroke="#8895a3"/>
+    <path d="M420 90 L455 118 L450 125 L415 110 Z" fill="#ccd4dd" stroke="#8895a3"/>
+    <rect x="300" y="95" width="56" height="10" rx="2" fill="#0d47a1"/>
+    <g fill="#4a86bf" opacity="0.92">
+      <circle cx="150" cy="100" r="6.5"/><circle cx="190" cy="100" r="6.5"/>
+      <circle cx="230" cy="100" r="6.5"/><circle cx="360" cy="100" r="6.5"/>
+      <circle cx="400" cy="100" r="6.5"/><circle cx="440" cy="100" r="6.5"/>
+    </g>
+  </g>
+</svg>

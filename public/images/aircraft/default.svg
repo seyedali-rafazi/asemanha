@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="55%" stop-color="#3b82c4"/>
+      <stop offset="100%" stop-color="#7cb8e8"/>
+    </linearGradient>
+    <linearGradient id="fuselage" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e8edf2"/>
+      <stop offset="100%" stop-color="#c5cdd6"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#sky)"/>
+  <ellipse cx="300" cy="360" rx="280" ry="18" fill="rgba(0,0,0,0.18)"/>
+  <g transform="translate(90 145)">
+    <path d="M40 70 L420 70 L430 78 L420 86 L40 86 Z" fill="url(#fuselage)" stroke="#8a96a3" stroke-width="1.2"/>
+    <path d="M180 70 L220 20 L250 20 L210 70 Z" fill="#d7dee6" stroke="#8a96a3" stroke-width="1"/>
+    <path d="M80 70 L20 95 L15 105 L80 86 Z" fill="#c5cdd6" stroke="#8a96a3" stroke-width="1"/>
+    <path d="M380 70 L450 95 L455 105 L380 86 Z" fill="#c5cdd6" stroke="#8a96a3" stroke-width="1"/>
+    <path d="M250 78 L290 78 L285 86 L255 86 Z" fill="#1976d2"/>
+    <circle cx="120" cy="78" r="7" fill="#4a90c8" opacity="0.85"/>
+    <circle cx="150" cy="78" r="7" fill="#4a90c8" opacity="0.85"/>
+    <circle cx="180" cy="78" r="7" fill="#4a90c8" opacity="0.85"/>
+    <circle cx="210" cy="78" r="7" fill="#4a90c8" opacity="0.85"/>
+    <circle cx="300" cy="78" r="7" fill="#4a90c8" opacity="0.85"/>
+    <circle cx="330" cy="78" r="7" fill="#4a90c8" opacity="0.85"/>
+    <circle cx="360" cy="78" r="7" fill="#4a90c8" opacity="0.85"/>
+  </g>
+</svg>

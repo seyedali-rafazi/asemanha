@@ -16,10 +16,12 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMap } from "react-map-gl/mapbox";
 import { useAircraft } from "../AircraftLayer/context/AircraftContext";
-import { getAircraftImage } from "../AircraftLayer/utils/getAircraftImage";
+import { useLiveAircraftEngine } from "../AircraftLayer/context/LiveAircraftContext";
+import AircraftThumb from "../AircraftLayer/components/AircraftThumb";
+import { formatHeading } from "../AircraftLayer/utils/aircraftMovement";
 import type { Aircraft } from "../AircraftLayer/types/Aircraft";
 import type { Airport } from "../AirportLayer/types/Airport";
 import type { Antenna } from "../AntennaLayer/types/Antenna";
@@ -27,13 +29,16 @@ import { useMapLayers } from "../../context/MapLayersContext";
 import { usePopupScreenPosition } from "../AircraftLayer/hooks/usePopupScreenPosition";
 import { POPUP_WIDTH } from "../AircraftLayer/utils/getPopupScreenPosition";
 
+const popupMuted = "rgba(255,255,255,0.55)";
+const popupText = "rgba(255,255,255,0.92)";
+
 function InfoRow({ label, value }: { label: string; value: string | number }) {
   return (
     <Box sx={{ display: "flex", justifyContent: "space-between", py: 0.4 }}>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" sx={{ color: popupMuted }}>
         {label}
       </Typography>
-      <Typography variant="caption" fontWeight={600}>
+      <Typography variant="caption" fontWeight={600} sx={{ color: popupText }}>
         {value}
       </Typography>
     </Box>
@@ -53,12 +58,7 @@ function AircraftPopupContent({
   return (
     <>
       <Box sx={{ position: "relative", height: 90 }}>
-        <Box
-          component="img"
-          src={getAircraftImage(aircraft.aircraftType)}
-          alt={aircraft.aircraftType}
-          sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
+        <AircraftThumb aircraftType={aircraft.aircraftType} iconSize={110} />
         <Box
           sx={{
             position: "absolute",
@@ -96,20 +96,20 @@ function AircraftPopupContent({
       </Box>
       <Box sx={{ px: 1.5, py: 1.25 }}>
         <Stack direction="row" spacing={1} mb={1}>
-          <Box sx={{ flex: 1, p: 0.75, borderRadius: 1.5, bgcolor: "grey.A100", textAlign: "center" }}>
+          <Box sx={{ flex: 1, p: 0.75, borderRadius: 1.5, bgcolor: "rgba(255,255,255,0.06)", textAlign: "center" }}>
             <Terrain sx={{ color: "primary.main", fontSize: 14 }} />
-            <Typography variant="caption" display="block" fontSize="0.6rem" color="text.secondary">Alt</Typography>
-            <Typography variant="caption" fontWeight={700}>{aircraft.altitude_ft.toLocaleString()} ft</Typography>
+            <Typography variant="caption" display="block" fontSize="0.6rem" sx={{ color: popupMuted }}>Alt</Typography>
+            <Typography variant="caption" fontWeight={700} sx={{ color: popupText }}>{aircraft.altitude_ft.toLocaleString()} ft</Typography>
           </Box>
-          <Box sx={{ flex: 1, p: 0.75, borderRadius: 1.5, bgcolor: "grey.A100", textAlign: "center" }}>
+          <Box sx={{ flex: 1, p: 0.75, borderRadius: 1.5, bgcolor: "rgba(255,255,255,0.06)", textAlign: "center" }}>
             <Speed sx={{ color: "primary.main", fontSize: 14 }} />
-            <Typography variant="caption" display="block" fontSize="0.6rem" color="text.secondary">Speed</Typography>
-            <Typography variant="caption" fontWeight={700}>{aircraft.speed_kts} kts</Typography>
+            <Typography variant="caption" display="block" fontSize="0.6rem" sx={{ color: popupMuted }}>Speed</Typography>
+            <Typography variant="caption" fontWeight={700} sx={{ color: popupText }}>{aircraft.speed_kts} kts</Typography>
           </Box>
-          <Box sx={{ flex: 1, p: 0.75, borderRadius: 1.5, bgcolor: "grey.A100", textAlign: "center" }}>
+          <Box sx={{ flex: 1, p: 0.75, borderRadius: 1.5, bgcolor: "rgba(255,255,255,0.06)", textAlign: "center" }}>
             <Route sx={{ color: "primary.main", fontSize: 14 }} />
-            <Typography variant="caption" display="block" fontSize="0.6rem" color="text.secondary">Hdg</Typography>
-            <Typography variant="caption" fontWeight={700}>{aircraft.heading_deg}°</Typography>
+            <Typography variant="caption" display="block" fontSize="0.6rem" sx={{ color: popupMuted }}>Hdg</Typography>
+            <Typography variant="caption" fontWeight={700} sx={{ color: popupText }}>{formatHeading(aircraft.heading_deg)}°</Typography>
           </Box>
         </Stack>
         <Divider sx={{ mb: 0.75 }} />
@@ -123,7 +123,11 @@ function AircraftPopupContent({
           variant={trackExists ? "outlined" : "contained"}
           startIcon={<Route />}
           disabled={trackExists}
-          onClick={() => addTrack(aircraft.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            addTrack(aircraft.id);
+          }}
           sx={{ mt: 1.25, py: 0.75, fontWeight: 600 }}
         >
           {trackExists ? "Track Drawn" : "Draw Track"}
@@ -229,17 +233,43 @@ function AntennaPopupContent({
 
 export default function MapItemPopup() {
   const { current: mapRef } = useMap();
-  const { selectedEntity, selectEntity, getSelectedEntityData } = useMapLayers();
+  const { selectedEntity, selectEntity, getEntityData } = useMapLayers();
+  const { getAircraftById } = useLiveAircraftEngine();
   const skipCloseRef = useRef(false);
+  const [frozen, setFrozen] = useState<{
+    anchor: { lon: number; lat: number };
+    entity: Aircraft | Airport | Antenna;
+  } | null>(null);
 
-  const entity = getSelectedEntityData();
+  useEffect(() => {
+    if (!selectedEntity) {
+      setFrozen(null);
+      return;
+    }
 
-  const lonLat = useMemo(() => {
-    if (!entity || !("lat" in entity) || !("lon" in entity)) return null;
-    return { lon: entity.lon, lat: entity.lat };
-  }, [entity]);
+    if (selectedEntity.category === "airplanes") {
+      const live = getAircraftById(selectedEntity.id);
+      const fallback = getEntityData("airplanes", selectedEntity.id);
+      const aircraft = live ?? fallback;
+      if (aircraft) {
+        setFrozen({
+          anchor: { lon: aircraft.lon, lat: aircraft.lat },
+          entity: { ...aircraft },
+        });
+      }
+      return;
+    }
 
-  const position = usePopupScreenPosition(lonLat);
+    const entity = getEntityData(selectedEntity.category, selectedEntity.id);
+    if (entity && "lat" in entity && "lon" in entity) {
+      setFrozen({
+        anchor: { lon: entity.lon, lat: entity.lat },
+        entity,
+      });
+    }
+  }, [selectedEntity?.id, selectedEntity?.category, getAircraftById, getEntityData]);
+
+  const position = usePopupScreenPosition(frozen?.anchor ?? null);
 
   useEffect(() => {
     if (!selectedEntity) return;
@@ -268,9 +298,10 @@ export default function MapItemPopup() {
     };
   }, [selectedEntity, mapRef, selectEntity]);
 
-  if (!selectedEntity || !entity || !position) return null;
+  if (!selectedEntity || !frozen || !position) return null;
 
   const handleClose = () => selectEntity(selectedEntity.category, null);
+  const displayEntity = frozen.entity;
 
   return (
     <Box
@@ -294,13 +325,13 @@ export default function MapItemPopup() {
         }}
       >
         {selectedEntity.category === "airplanes" && (
-          <AircraftPopupContent aircraft={entity as Aircraft} onClose={handleClose} />
+          <AircraftPopupContent aircraft={displayEntity as Aircraft} onClose={handleClose} />
         )}
         {selectedEntity.category === "airports" && (
-          <AirportPopupContent airport={entity as Airport} onClose={handleClose} />
+          <AirportPopupContent airport={displayEntity as Airport} onClose={handleClose} />
         )}
         {selectedEntity.category === "antennas" && (
-          <AntennaPopupContent antenna={entity as Antenna} onClose={handleClose} />
+          <AntennaPopupContent antenna={displayEntity as Antenna} onClose={handleClose} />
         )}
       </Box>
     </Box>

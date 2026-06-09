@@ -1,7 +1,10 @@
 import { useCallback, useMemo } from "react";
 import DeckGLOverlay from "../../../../components/map/components/DeckGLOverlay/DeckGLOverlay";
 import { useAircraft } from "../AircraftLayer/context/AircraftContext";
-import aircraftData from "../AircraftLayer/data/iran_aircraft_50.json";
+import {
+  useLiveAircraftEngine,
+  useLiveAircraftSnapshot,
+} from "../AircraftLayer/context/LiveAircraftContext";
 import { createAircraftIconLayer } from "../AircraftLayer/layers/createAircraftLayer";
 import { createFlightPathLayer } from "../AircraftLayer/layers/createFlightPathLayer";
 import type { Aircraft } from "../AircraftLayer/types/Aircraft";
@@ -22,6 +25,8 @@ import {
 const MapEntitiesLayer = () => {
   const { isItemVisible, selectEntity } = useMapLayers();
   const { tracks } = useAircraft();
+  const liveAircraft = useLiveAircraftSnapshot();
+  const { getTrackPath } = useLiveAircraftEngine();
   const handleHover = useStableMapCursor("map-entities");
   const { airplaneSize, showAirplaneAltitude, mapStyleId } = useAppSelector(
     (state) => state.settings
@@ -30,11 +35,8 @@ const MapEntitiesLayer = () => {
   const pickable = !isDrawToolActive(activeTool);
 
   const visibleAirplanes = useMemo(
-    () =>
-      (aircraftData as Aircraft[]).filter((a) =>
-        isItemVisible("airplanes", a.id)
-      ),
-    [isItemVisible]
+    () => liveAircraft.filter((a) => isItemVisible("airplanes", a.id)),
+    [liveAircraft, isItemVisible]
   );
 
   const visibleAirports = useMemo(
@@ -68,20 +70,24 @@ const MapEntitiesLayer = () => {
     [selectEntity]
   );
 
+  const visibleTracks = useMemo(
+    () => tracks.filter((t) => t.visible),
+    [tracks]
+  );
+
   const layers = useMemo(() => {
     const result = [];
 
-    tracks
-      .filter((t) => t.visible)
-      .forEach((track) => {
-        const aircraft = (aircraftData as Aircraft[]).find(
-          (a) => a.id === track.aircraftId
+    visibleTracks.forEach((track) => {
+      const aircraft = liveAircraft.find((a) => a.id === track.aircraftId);
+      if (aircraft) {
+        const pathLayers = createFlightPathLayer(
+          aircraft,
+          getTrackPath(track.aircraftId)
         );
-        if (aircraft) {
-          const pathLayers = createFlightPathLayer(aircraft);
-          if (pathLayers) result.push(...pathLayers);
-        }
-      });
+        if (pathLayers) result.push(...pathLayers);
+      }
+    });
 
     if (visibleAirports.length > 0) {
       result.push(
@@ -117,7 +123,9 @@ const MapEntitiesLayer = () => {
 
     return result;
   }, [
-    tracks,
+    visibleTracks,
+    liveAircraft,
+    getTrackPath,
     visibleAirplanes,
     visibleAirports,
     visibleAntennas,
@@ -128,8 +136,6 @@ const MapEntitiesLayer = () => {
     airplaneSize,
     showAirplaneAltitude,
     pickable,
-    activeTool,
-    mapStyleId,
   ]);
 
   return <DeckGLOverlay key={mapStyleId} layers={layers} />;

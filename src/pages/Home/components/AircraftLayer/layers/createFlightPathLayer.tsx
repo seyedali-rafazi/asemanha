@@ -1,12 +1,14 @@
 import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
 import type { Aircraft } from "../types/Aircraft";
+import { buildTrackPath } from "../utils/aircraftMovement";
 
-function toLonLatPath(path: [number, number][]): [number, number][] {
-  return path.map(([lat, lon]) => [lon, lat]);
-}
+type TrackPoint = [number, number, number];
 
-export function createFlightPathLayer(aircraft: Aircraft) {
-  const pathCoords = toLonLatPath(aircraft.path);
+export function createFlightPathLayer(
+  aircraft: Aircraft,
+  trackPath?: TrackPoint[]
+) {
+  const pathCoords = trackPath ?? buildTrackPath(aircraft);
   if (pathCoords.length < 2) return null;
 
   const startPoint = pathCoords[0];
@@ -22,6 +24,9 @@ export function createFlightPathLayer(aircraft: Aircraft) {
     getWidth: 4,
     capRounded: true,
     jointRounded: true,
+    updateTriggers: {
+      getPath: pathCoords,
+    },
   });
 
   const endpointsLayer = new ScatterplotLayer({
@@ -33,8 +38,8 @@ export function createFlightPathLayer(aircraft: Aircraft) {
     pickable: false,
     getPosition: (d) => d.position,
     getFillColor: (d) =>
-      d.type === "start" ? [34, 197, 94, 255] : [239, 68, 68, 255],
-    getRadius: 8,
+      d.type === "start" ? [34, 197, 94, 255] : [255, 204, 0, 255],
+    getRadius: 6,
     radiusUnits: "pixels",
     stroked: true,
     getLineColor: [255, 255, 255, 200],
