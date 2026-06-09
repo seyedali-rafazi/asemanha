@@ -4,10 +4,361 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ase</title>
+    <meta name="theme-color" content="#0f1113" />
+    <title>Asemanyar</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #0f1113;
+      }
+
+      #app-loading {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        overflow: hidden;
+        background: radial-gradient(
+          ellipse at 50% 35%,
+          #16202c 0%,
+          #0f1113 62%
+        );
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        transition: opacity 0.5s ease;
+      }
+      #app-loading.app-loading--hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* --- map graticule backdrop --- */
+      #app-loading::before {
+        content: "";
+        position: absolute;
+        inset: -60px;
+        background-image: linear-gradient(
+            rgba(66, 165, 245, 0.05) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(66, 165, 245, 0.05) 1px, transparent 1px);
+        background-size: 56px 56px;
+        animation: app-loading-grid 14s linear infinite;
+      }
+      #app-loading::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at 50% 50%,
+          transparent 30%,
+          rgba(15, 17, 19, 0.9) 100%
+        );
+        pointer-events: none;
+      }
+      @keyframes app-loading-grid {
+        from {
+          transform: translate(0, 0);
+        }
+        to {
+          transform: translate(56px, 56px);
+        }
+      }
+
+      #app-loading > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* --- radar scope --- */
+      .app-loading__radar {
+        position: relative;
+        width: 168px;
+        height: 168px;
+        border-radius: 50%;
+        border: 1px solid rgba(66, 165, 245, 0.35);
+        background: radial-gradient(
+          circle,
+          rgba(25, 118, 210, 0.1) 0%,
+          rgba(25, 118, 210, 0.03) 55%,
+          transparent 75%
+        );
+        box-shadow: 0 0 50px rgba(25, 118, 210, 0.18),
+          inset 0 0 30px rgba(25, 118, 210, 0.08);
+      }
+      .app-loading__ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid rgba(66, 165, 245, 0.18);
+      }
+      .app-loading__ring--1 {
+        inset: 21px;
+      }
+      .app-loading__ring--2 {
+        inset: 42px;
+      }
+      .app-loading__ring--3 {
+        inset: 63px;
+        border-color: rgba(66, 165, 245, 0.26);
+      }
+      .app-loading__crosshair-h,
+      .app-loading__crosshair-v {
+        position: absolute;
+        background: rgba(66, 165, 245, 0.14);
+      }
+      .app-loading__crosshair-h {
+        left: 4px;
+        right: 4px;
+        top: 50%;
+        height: 1px;
+      }
+      .app-loading__crosshair-v {
+        top: 4px;
+        bottom: 4px;
+        left: 50%;
+        width: 1px;
+      }
+      .app-loading__sweep {
+        position: absolute;
+        inset: 2px;
+        border-radius: 50%;
+        background: conic-gradient(
+          from 0deg,
+          rgba(66, 165, 245, 0.45) 0deg,
+          rgba(66, 165, 245, 0.12) 42deg,
+          transparent 70deg,
+          transparent 360deg
+        );
+        -webkit-mask: radial-gradient(circle, black 98%, transparent 100%);
+        mask: radial-gradient(circle, black 98%, transparent 100%);
+        animation: app-loading-sweep 2.6s linear infinite;
+      }
+      @keyframes app-loading-sweep {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* --- aircraft contacts (blips) --- */
+      .app-loading__blip {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #42a5f5;
+        box-shadow: 0 0 8px rgba(66, 165, 245, 0.9);
+        opacity: 0;
+        animation: app-loading-blip 2.6s ease-out infinite;
+      }
+      .app-loading__blip--1 {
+        top: 26%;
+        left: 64%;
+        animation-delay: 0.45s;
+      }
+      .app-loading__blip--2 {
+        top: 68%;
+        left: 30%;
+        animation-delay: 1.65s;
+      }
+      .app-loading__blip--3 {
+        top: 44%;
+        left: 20%;
+        width: 4px;
+        height: 4px;
+        animation-delay: 2.15s;
+      }
+      @keyframes app-loading-blip {
+        0% {
+          opacity: 0;
+          transform: scale(0.4);
+        }
+        8% {
+          opacity: 1;
+          transform: scale(1.25);
+        }
+        45% {
+          opacity: 0.55;
+          transform: scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(0.85);
+        }
+      }
+
+      /* --- center aircraft --- */
+      .app-loading__plane {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 38px;
+        height: 38px;
+        margin: -19px 0 0 -19px;
+        color: #e3f2fd;
+        filter: drop-shadow(0 0 10px rgba(66, 165, 245, 0.55));
+        animation: app-loading-hover 3.2s ease-in-out infinite;
+      }
+      @keyframes app-loading-hover {
+        0%,
+        100% {
+          transform: rotate(45deg) translateY(0);
+        }
+        50% {
+          transform: rotate(45deg) translateY(-4px);
+        }
+      }
+
+      /* --- wordmark --- */
+      .app-loading__brand {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+      .app-loading__title {
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: 9px;
+        margin-right: -9px;
+        text-transform: uppercase;
+        background: linear-gradient(
+          100deg,
+          rgba(255, 255, 255, 0.92) 35%,
+          #42a5f5 50%,
+          rgba(255, 255, 255, 0.92) 65%
+        );
+        background-size: 220% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: app-loading-shine 3s linear infinite;
+      }
+      @keyframes app-loading-shine {
+        from {
+          background-position: 220% 0;
+        }
+        to {
+          background-position: -120% 0;
+        }
+      }
+      .app-loading__subtitle {
+        font-size: 10px;
+        letter-spacing: 4px;
+        margin-right: -4px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.38);
+      }
+
+      /* --- progress --- */
+      .app-loading__progress {
+        width: 220px;
+        height: 3px;
+        border-radius: 99px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .app-loading__progress-bar {
+        height: 100%;
+        width: 40%;
+        border-radius: 99px;
+        background: linear-gradient(90deg, #1976d2, #42a5f5);
+        box-shadow: 0 0 10px rgba(66, 165, 245, 0.7);
+        animation: app-loading-progress 1.4s cubic-bezier(0.4, 0, 0.2, 1)
+          infinite;
+      }
+      @keyframes app-loading-progress {
+        0% {
+          transform: translateX(-110%);
+        }
+        60% {
+          transform: translateX(160%);
+        }
+        100% {
+          transform: translateX(280%);
+        }
+      }
+
+      .app-loading__status {
+        min-height: 16px;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 12px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        transition: opacity 0.3s ease;
+      }
+      .app-loading__status--fade {
+        opacity: 0;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="app-loading">
+      <div class="app-loading__radar">
+        <div class="app-loading__ring app-loading__ring--1"></div>
+        <div class="app-loading__ring app-loading__ring--2"></div>
+        <div class="app-loading__ring app-loading__ring--3"></div>
+        <div class="app-loading__crosshair-h"></div>
+        <div class="app-loading__crosshair-v"></div>
+        <div class="app-loading__sweep"></div>
+        <div class="app-loading__blip app-loading__blip--1"></div>
+        <div class="app-loading__blip app-loading__blip--2"></div>
+        <div class="app-loading__blip app-loading__blip--3"></div>
+        <svg
+          class="app-loading__plane"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
+          />
+        </svg>
+      </div>
+
+      <div class="app-loading__brand">
+        <div class="app-loading__title">Asemanyar</div>
+        <div class="app-loading__subtitle">Flight Tracking</div>
+      </div>
+
+      <div class="app-loading__progress">
+        <div class="app-loading__progress-bar"></div>
+      </div>
+      <div class="app-loading__status" id="app-loading-status">
+        Initializing map engine
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var messages = [
+          "Initializing map engine",
+          "Scanning airspace",
+          "Loading aircraft data",
+          "Preparing map layers",
+          "Almost ready",
+        ];
+        var el = document.getElementById("app-loading-status");
+        var i = 0;
+        var timer = setInterval(function () {
+          var loader = document.getElementById("app-loading");
+          if (!el || !loader || loader.classList.contains("app-loading--hidden")) {
+            clearInterval(timer);
+            return;
+          }
+          el.classList.add("app-loading__status--fade");
+          setTimeout(function () {
+            i = Math.min(i + 1, messages.length - 1);
+            el.textContent = messages[i];
+            el.classList.remove("app-loading__status--fade");
+          }, 300);
+        }, 1600);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

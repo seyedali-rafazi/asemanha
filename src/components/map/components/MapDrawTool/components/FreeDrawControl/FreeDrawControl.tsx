@@ -3,13 +3,10 @@ import { useState } from "react";
 import FreeDrawButton from "./components/FreeDrawButton";
 import FreeDrawSettingsBar from "./components/FreeDrawSettingsBar";
 import FreeDrawLogic from "./components/FreeDrawLogic";
-import type { ToolProps } from "../../../../types/MapTypes";
+import { useExclusiveTool } from "../../../../context/MapToolContext";
 
-const FreeDrawControl: React.FC<ToolProps> = ({
-  activeTool,
-  setActiveTool,
-}) => {
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
+const FreeDrawControl = () => {
+  const [isDrawingMode, setIsDrawingMode] = useExclusiveTool("freedraw");
   const [lineColor, setLineColor] = useState("#007cbf");
   const [lineWidth, setLineWidth] = useState(5);
 
@@ -18,7 +15,6 @@ const FreeDrawControl: React.FC<ToolProps> = ({
       <FreeDrawButton
         isDrawingMode={isDrawingMode}
         setIsDrawingMode={setIsDrawingMode}
-        setActiveTool={setActiveTool}
       />
 
       {/* Renders the color/thickness settings if drawing mode is active */}
@@ -36,7 +32,6 @@ const FreeDrawControl: React.FC<ToolProps> = ({
         isDrawingMode={isDrawingMode}
         lineColor={lineColor}
         lineWidth={lineWidth}
-        activeTool={activeTool}
         setIsDrawingMode={setIsDrawingMode}
       />
     </Box>

@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useMap } from "react-map-gl/mapbox";
-import type { MapTool } from "../../../../../types/MapTypes";
 
 interface FreeDrawLogicProps {
   isDrawingMode: boolean;
   lineColor: string;
   lineWidth: number;
-  activeTool: MapTool;
   setIsDrawingMode: (value: boolean) => void;
 }
 
@@ -16,7 +14,6 @@ const FreeDrawLogic = ({
   isDrawingMode,
   lineColor,
   lineWidth,
-  activeTool,
   setIsDrawingMode,
 }: FreeDrawLogicProps) => {
   const { current: currentMap } = useMap();
@@ -33,12 +30,6 @@ const FreeDrawLogic = ({
   const lineWidthRef = useRef(lineWidth);
   lineColorRef.current = lineColor;
   lineWidthRef.current = lineWidth;
-
-  useEffect(() => {
-    if (activeTool && activeTool !== "freedraw") {
-      setIsDrawingMode(false);
-    }
-  }, [activeTool, setIsDrawingMode]);
 
   const ensureFreedrawLayers = useCallback(() => {
     if (!map || !map.isStyleLoaded()) return false;

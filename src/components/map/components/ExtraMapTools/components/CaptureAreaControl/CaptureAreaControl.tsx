@@ -13,10 +13,11 @@ import {
 } from "@mui/material";
 import CropIcon from "@mui/icons-material/Crop";
 import { useMap } from "react-map-gl/mapbox";
+import { useExclusiveTool } from "../../../../context/MapToolContext";
 
 const CaptureAreaControl = () => {
   const theme = useTheme();
-  const [isActive, setIsActive] = useState(false);
+  const [isActive, setIsActive] = useExclusiveTool("capture");
 
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);

@@ -9,13 +9,14 @@ import MapDrawTools from "./components/MapDrawTool/MapDrawTools";
 import ExtraMapTools from "./components/ExtraMapTools/ExtraMapTools";
 import MapView from "./components/MapView/MapView";
 import MapResizeHandler from "./components/MapResizeHandler/MapResizeHandler";
-import { useRef, useState, type FC, type ReactNode } from "react";
+import { useRef, type FC, type ReactNode } from "react";
 import { useAppSelector } from "../../store/hooks";
 import { getMapStyleUrl } from "../../store/mapStyles";
 import MapFlatViewEnforcer from "./components/MapFlatViewEnforcer/MapFlatViewEnforcer";
 import MapStyleSynchronizer from "./components/MapStyleSynchronizer/MapStyleSynchronizer";
 import { MapToolProvider } from "./context/MapToolContext";
-import type { MapTool } from "./types/MapTypes";
+import { AccordionGroupProvider } from "../utils/MapTools/AccordionGroupContext";
+import MapAircraftBadge from "../../pages/Home/components/MapAircraftBadge/MapAircraftBadge";
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN ||
@@ -55,7 +56,6 @@ const worldPolygon = {
 const MapboxMap: FC<MapboxMapProps> = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [activeTool, setActiveTool] = useState<MapTool>(null);
   const mapStyleId = useAppSelector((state) => state.settings.mapStyleId);
   const bootMapStyleRef = useRef<string | null>(null);
   if (bootMapStyleRef.current === null) {
@@ -110,32 +110,35 @@ const MapboxMap: FC<MapboxMapProps> = ({ children }) => {
           />
         </Source>
 
-        <MapToolProvider activeTool={activeTool}>
-          {children}
+        <MapToolProvider>
+          <AccordionGroupProvider>
+            {children}
+
+            {/* Map Controls */}
+            <MapControlBox position={ZOOM_BOX_POSITION}>
+              <MapNavigator />
+            </MapControlBox>
+
+            <MapControlBox position={TOOLBAR_POSITION}>
+              <MapDrawTools />
+            </MapControlBox>
+
+            <MapControlBox position={TOOLBAR_POSITION}>
+              <ExtraMapTools />
+            </MapControlBox>
+
+            <MapControlBox position={MAP_VIEW}>
+              <MapAircraftBadge />
+              <MapView />
+            </MapControlBox>
+
+            {!isMobile && (
+              <MapControlBox position={COORDINATE_POSITION}>
+                <CoordinateDisplay />
+              </MapControlBox>
+            )}
+          </AccordionGroupProvider>
         </MapToolProvider>
-
-        {/* Map Controls */}
-        <MapControlBox position={ZOOM_BOX_POSITION}>
-          <MapNavigator />
-        </MapControlBox>
-
-        <MapControlBox position={TOOLBAR_POSITION}>
-          <MapDrawTools activeTool={activeTool} setActiveTool={setActiveTool} />
-        </MapControlBox>
-
-        <MapControlBox position={TOOLBAR_POSITION}>
-          <ExtraMapTools />
-        </MapControlBox>
-
-        <MapControlBox position={MAP_VIEW}>
-          <MapView />
-        </MapControlBox>
-
-        {!isMobile && (
-          <MapControlBox position={COORDINATE_POSITION}>
-            <CoordinateDisplay />
-          </MapControlBox>
-        )}
       </Map>
     </div>
   );

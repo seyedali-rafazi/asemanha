@@ -61,14 +61,37 @@ export default function SettingsPanel() {
             onChange={(_, value: MapStyleId | null) => {
               if (value) dispatch(setMapStyleId(value));
             }}
-            sx={{ flexWrap: "wrap", gap: 0.5 }}
+            sx={{
+              flexWrap: "wrap",
+              gap: 0.5,
+              // ToggleButtonGroup normally merges adjacent borders (drops left
+              // borders / inner radii). That looks broken once buttons wrap into
+              // a grid, so give every button its own complete border + radius.
+              "& .MuiToggleButtonGroup-grouped": {
+                flex: "1 1 45%",
+                textTransform: "none",
+                fontSize: "0.75rem",
+                m: 0,
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: "8px",
+                "&:not(:first-of-type)": {
+                  ml: 0,
+                  borderLeft: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: "8px",
+                },
+                "&:not(:last-of-type)": {
+                  borderRadius: "8px",
+                },
+                "&.Mui-selected": {
+                  borderColor: "primary.main",
+                },
+              },
+            }}
           >
             {MAP_STYLE_OPTIONS.map((style) => (
-              <ToggleButton
-                key={style.id}
-                value={style.id}
-                sx={{ flex: "1 1 45%", textTransform: "none", fontSize: "0.75rem" }}
-              >
+              <ToggleButton key={style.id} value={style.id}>
                 {style.label}
               </ToggleButton>
             ))}

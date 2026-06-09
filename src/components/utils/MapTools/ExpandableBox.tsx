@@ -9,24 +9,29 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { useState, type FC, type ReactNode } from "react";
+import { type FC, type ReactNode } from "react";
 import {
   getMapToolAccordionButtonSx,
   getMapToolButtonSx,
 } from "../../map/utils/mapToolButtonStyles";
+import { useAccordionGroupItem } from "./AccordionGroupContext";
 
 interface ExpandableBoxProps {
   children: ReactNode;
   accordionText: string;
   accordionIcon: ReactNode;
+  id?: string;
+  footer?: ReactNode;
 }
 
 const ExpandableBox: FC<ExpandableBoxProps> = ({
   children,
   accordionText,
   accordionIcon,
+  id,
+  footer,
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const { expanded, setExpanded } = useAccordionGroupItem(id ?? accordionText);
   const theme = useTheme();
 
   return (
@@ -93,6 +98,20 @@ const ExpandableBox: FC<ExpandableBoxProps> = ({
           </IconButton>
         </Stack>
       </Collapse>
+
+      {footer && (
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            px: 0.5,
+            pb: 0.5,
+          }}
+        >
+          {footer}
+        </Box>
+      )}
     </Paper>
   );
 };

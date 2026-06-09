@@ -18,6 +18,12 @@ export default function MapStyleSynchronizer() {
 
     if (mapStyleId === activeStyleIdRef.current) return;
 
+    // Mark the target style as applied immediately. mapbox-gl skips the
+    // `style.load` event when it can diff two styles in place, so relying on
+    // that event to update this ref would leave it desynced and cause later
+    // style switches to be incorrectly short-circuited.
+    activeStyleIdRef.current = mapStyleId;
+
     const nextStyle = getMapStyleUrl(mapStyleId);
     const camera = {
       center: map.getCenter(),
@@ -36,15 +42,15 @@ export default function MapStyleSynchronizer() {
       map.jumpTo(camera);
       map.dragRotate.disable();
       map.touchPitch?.disable();
-      activeStyleIdRef.current = mapStyleId;
 
       // Notify deck.gl overlay to refresh after projection/camera are restored.
       map.fire("ase:style-ready");
-      map.off("style.load", handleStyleLoad);
     };
 
     map.once("style.load", handleStyleLoad);
-    map.setStyle(nextStyle);
+    // Force a full reload (diff: false) so `style.load` always fires and the
+    // tool layers/sources get cleanly re-initialised on every switch.
+    map.setStyle(nextStyle, { diff: false });
 
     return () => {
       map.off("style.load", handleStyleLoad);

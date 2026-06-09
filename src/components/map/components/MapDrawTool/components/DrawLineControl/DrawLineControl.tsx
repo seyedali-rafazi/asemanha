@@ -1,10 +1,10 @@
 import { Box } from "@mui/material";
-import { useState } from "react";
 import LineButton from "./components/LineButton";
 import LineModal from "./components/LineModal";
+import { useExclusiveTool } from "../../../../context/MapToolContext";
 
 const DrawLineControl = () => {
-  const [isDrawingLine, setIsDrawingLine] = useState(false);
+  const [isDrawingLine, setIsDrawingLine] = useExclusiveTool("line");
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>

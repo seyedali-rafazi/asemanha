@@ -1,10 +1,10 @@
 import { Box } from "@mui/material";
-import { useState } from "react";
 import RectangleButton from "./components/RectangleButton";
 import RectangleDrawLogic from "./components/RectangleDrawLogic";
+import { useExclusiveTool } from "../../../../context/MapToolContext";
 
 const DrawRectangleControl = () => {
-  const [isRectMode, setIsRectMode] = useState(false);
+  const [isRectMode, setIsRectMode] = useExclusiveTool("rectangle");
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>

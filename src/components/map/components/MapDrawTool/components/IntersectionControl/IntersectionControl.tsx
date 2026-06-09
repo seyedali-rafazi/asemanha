@@ -1,11 +1,11 @@
 // src/components/ExpandableToolbar/components/DrawLineControl/DrawLineControl.jsx
 import { Box } from "@mui/material";
-import { useState } from "react";
 import IntersectionButton from "./components/IntersectionButton";
 import IntersectionLogic from "./components/IntersectionLogic";
+import { useExclusiveTool } from "../../../../context/MapToolContext";
 
 const IntersectionControl = () => {
-  const [isLineMode, setIsLineMode] = useState(false);
+  const [isLineMode, setIsLineMode] = useExclusiveTool("intersection");
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>

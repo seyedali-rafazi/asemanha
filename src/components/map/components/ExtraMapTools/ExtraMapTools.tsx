@@ -8,6 +8,7 @@ import CaptureAreaControl from "./components/CaptureAreaControl/CaptureAreaContr
 const ExtraMapTools = () => {
   return (
     <ExpandableBox
+      id="tool"
       accordionText="TOOL"
       accordionIcon={
         <Architecture

@@ -1,10 +1,10 @@
 import { Box } from "@mui/material";
-import { useState } from "react";
 import PolygonButton from "./components/PolygonButton";
 import PolygonDrawLogic from "./components/PolygonDrawLogic";
+import { useExclusiveTool } from "../../../../context/MapToolContext";
 
 const DrawPolygonControl = () => {
-  const [isPolyMode, setIsPolyMode] = useState(false);
+  const [isPolyMode, setIsPolyMode] = useExclusiveTool("polygon");
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>

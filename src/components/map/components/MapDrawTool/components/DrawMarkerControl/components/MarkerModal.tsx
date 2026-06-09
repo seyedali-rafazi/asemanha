@@ -30,12 +30,7 @@ const initialMarkerState = {
   opacity: 100,
 };
 
-const MarkerModal: FC<MarkerButtonProps> = ({
-  isDrawing,
-  setIsDrawing,
-  activeTool,
-  setActiveTool,
-}) => {
+const MarkerModal: FC<MarkerButtonProps> = ({ isDrawing, setIsDrawing }) => {
   const { current: currentMap } = useMap();
   const map = currentMap?.getMap();
 
@@ -44,12 +39,6 @@ const MarkerModal: FC<MarkerButtonProps> = ({
 
   const markersRef = useRef([]);
   const isDrawingRef = useRef(isDrawing);
-
-  useEffect(() => {
-    if (activeTool && activeTool !== "marker") {
-      setIsDrawing(false);
-    }
-  }, [activeTool, setIsDrawing]);
 
   useEffect(() => {
     isDrawingRef.current = isDrawing;

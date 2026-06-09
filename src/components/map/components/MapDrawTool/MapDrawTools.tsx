@@ -9,11 +9,11 @@ import DrawRectangleControl from "./components/DrawRectangleControl/DrawRectangl
 import FreeDrawControl from "./components/FreeDrawControl/FreeDrawControl";
 import IntersectionControl from "./components/IntersectionControl/IntersectionControl";
 import CreateIcon from "@mui/icons-material/Create";
-import type { ToolProps } from "../../types/MapTypes";
 
-const MapDrawTools: React.FC<ToolProps> = ({ activeTool, setActiveTool }) => {
+const MapDrawTools = () => {
   return (
     <ExpandableBox
+      id="draw"
       accordionText="DRAW"
       accordionIcon={
         <CreateIcon
@@ -24,12 +24,9 @@ const MapDrawTools: React.FC<ToolProps> = ({ activeTool, setActiveTool }) => {
         />
       }
     >
-      <DrawMarkerControl
-        activeTool={activeTool}
-        setActiveTool={setActiveTool}
-      />
+      <DrawMarkerControl />
       <DrawLineControl />
-      <FreeDrawControl activeTool={activeTool} setActiveTool={setActiveTool} />
+      <FreeDrawControl />
       <DrawRectangleControl />
       <DrawPolygonControl />
       <DrawCircleControl />

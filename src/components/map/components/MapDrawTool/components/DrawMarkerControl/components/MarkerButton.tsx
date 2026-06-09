@@ -4,17 +4,11 @@ import type { FC } from "react";
 import { getMapToolButtonSx } from "../../../../../utils/mapToolButtonStyles";
 import type { MarkerButtonProps } from "../types/MarkerType";
 
-const MarkerButton: FC<MarkerButtonProps> = ({
-  isDrawing,
-  setIsDrawing,
-  setActiveTool,
-}) => {
+const MarkerButton: FC<MarkerButtonProps> = ({ isDrawing, setIsDrawing }) => {
   const theme = useTheme();
 
   const handleToggle = () => {
-    const next = !isDrawing;
-    setIsDrawing(next);
-    setActiveTool(next ? "marker" : null);
+    setIsDrawing(!isDrawing);
   };
 
   return (
