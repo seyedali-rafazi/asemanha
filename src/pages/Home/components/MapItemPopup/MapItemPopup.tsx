@@ -2,6 +2,7 @@ import {
   AirplanemodeActive,
   CellTower,
   Close,
+  Delete,
   Flight,
   Route,
   Speed,
@@ -52,7 +53,7 @@ function AircraftPopupContent({
   aircraft: Aircraft;
   onClose: () => void;
 }) {
-  const { addTrack, hasTrack } = useAircraft();
+  const { addTrack, removeTrack, hasTrack } = useAircraft();
   const trackExists = hasTrack(aircraft.id);
 
   return (
@@ -121,16 +122,20 @@ function AircraftPopupContent({
           fullWidth
           size="small"
           variant={trackExists ? "outlined" : "contained"}
-          startIcon={<Route />}
-          disabled={trackExists}
+          color={trackExists ? "error" : "primary"}
+          startIcon={trackExists ? <Delete /> : <Route />}
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            addTrack(aircraft.id);
+            if (trackExists) {
+              removeTrack(aircraft.id);
+            } else {
+              addTrack(aircraft.id);
+            }
           }}
           sx={{ mt: 1.25, py: 0.75, fontWeight: 600 }}
         >
-          {trackExists ? "Track Drawn" : "Draw Track"}
+          {trackExists ? "Delete Drawn Track" : "Draw Track"}
         </Button>
       </Box>
     </>

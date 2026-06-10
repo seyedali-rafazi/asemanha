@@ -7,13 +7,23 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { BASE_AIRCRAFT } from "../../data/aircraftFleet";
 import { useAircraft } from "../../context/AircraftContext";
 
 export default function TracksPanel() {
   const { tracks, toggleTrackVisibility, removeTrack } = useAircraft();
   const data = BASE_AIRCRAFT;
+  const listRef = useRef<HTMLUListElement>(null);
+  const prevTrackCountRef = useRef(tracks.length);
+
+  useEffect(() => {
+    if (tracks.length > prevTrackCountRef.current && listRef.current) {
+      const lastItem = listRef.current.lastElementChild;
+      lastItem?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    prevTrackCountRef.current = tracks.length;
+  }, [tracks.length]);
 
   const trackItems = useMemo(
     () =>
@@ -38,7 +48,12 @@ export default function TracksPanel() {
   }
 
   return (
-    <List disablePadding>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+      <List
+        ref={listRef}
+        disablePadding
+        sx={{ flex: 1, overflow: "auto", mx: -0.5, minHeight: 0 }}
+      >
       {trackItems.map(({ track, aircraft }) => (
         <ListItem
           key={track.aircraftId}
@@ -96,6 +111,7 @@ export default function TracksPanel() {
           />
         </ListItem>
       ))}
-    </List>
+      </List>
+    </Box>
   );
 }
