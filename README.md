@@ -19,6 +19,9 @@ Real-time-style aircraft visualization, rich drawing tools, and layered map data
 
 ## Overview
 
+**live :** [asemanyar.ir](https://www.asemanyar.ir/)
+
+
 **Asemanyar** ("sky companion") is a dark-themed aviation map application centered on Iranian airspace. It renders a simulated live fleet of aircraft moving along realistic flight paths, alongside airports and radio antennas, on top of switchable base maps. A full suite of drawing and measurement tools turns the map into an interactive workspace.
 
 > Aircraft movement is **simulated client-side** — each aircraft advances along predefined waypoints at its real cruise speed using haversine math, animated at ~20 Hz. No external flight-data API is required.
