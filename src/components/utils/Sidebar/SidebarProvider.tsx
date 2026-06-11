@@ -140,7 +140,7 @@ export const SidebarProvider = ({ children, config }) => {
 
   return (
     <SidebarContext.Provider value={contextValue}>
-      <Box sx={{ display: "flex", height: "100vh", width: "100vw", overflow: "hidden" }}>
+      <Box sx={{ display: "flex", height: "100%", width: "100%", overflow: "hidden" }}>
         <Box
           sx={{
             width: COLLAPSED_WIDTH,
@@ -174,8 +174,8 @@ export const SidebarProvider = ({ children, config }) => {
               position: "fixed",
               left: COLLAPSED_WIDTH,
               top: 0,
+              bottom: 0,
               width: PANEL_WIDTH,
-              height: "100vh",
               zIndex: 1,
               display: "flex",
               flexDirection: "column",

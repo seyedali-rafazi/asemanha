@@ -15,11 +15,14 @@ html:focus-within {
   scroll-behavior: smooth;
 }
 
-/* 4. Full height layout */
+/* 4. Full height layout — use % not vh to avoid mobile browser chrome overflow */
 html,
 body,
 #root {
   height: 100%;
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* 5. Body defaults */

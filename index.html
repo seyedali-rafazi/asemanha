@@ -3,13 +3,47 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0f1113" />
-    <title>Asemanyar</title>
+    <meta name="description" content="Asemanyar — real-time flight tracking map for Iranian airspace. Track aircraft, airports, and antennas on an interactive aviation map with drawing and measurement tools." />
+    <meta name="keywords" content="flight tracking, aviation map, aircraft tracker, Iranian airspace, live flight map, Asemanyar, airplane tracker" />
+    <meta name="author" content="Asemanyar" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.asemanyar.ir/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Asemanyar" />
+    <meta property="og:title" content="Asemanyar — Flight Tracking & Aviation Map" />
+    <meta property="og:description" content="Interactive flight tracking map for Iranian airspace. View aircraft, airports, antennas, and use professional map tools." />
+    <meta property="og:url" content="https://www.asemanyar.ir/" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Asemanyar — Flight Tracking & Aviation Map" />
+    <meta name="twitter:description" content="Interactive flight tracking map for Iranian airspace. View aircraft, airports, antennas, and use professional map tools." />
+    <title>Asemanyar — Flight Tracking & Aviation Map</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Asemanyar",
+        "url": "https://www.asemanyar.ir/",
+        "description": "Interactive flight tracking and aviation map platform for Iranian airspace with aircraft, airport, and antenna layers.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
     <style>
       html,
       body {
         margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
         background: #0f1113;
       }
 
@@ -296,6 +330,13 @@
     </style>
   </head>
   <body>
+    <noscript>
+      <h1>Asemanyar — Flight Tracking &amp; Aviation Map</h1>
+      <p>
+        Interactive flight tracking map for Iranian airspace. Track aircraft,
+        airports, and antennas with professional map tools.
+      </p>
+    </noscript>
     <div id="root"></div>
     <div id="app-loading">
       <div class="app-loading__radar">
