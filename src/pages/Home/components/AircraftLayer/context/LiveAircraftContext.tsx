@@ -175,9 +175,11 @@ export function LiveAircraftProvider({
     [notify]
   );
 
-  // React Query fetch whenever viewport (bbox or zoom) changes
+  // React Query fetch whenever viewport (bbox or zoom) changes on motion/resize stop,
+  // and refetch every 10 seconds for live positions
   const aircraftQuery = useAircraftListQuery(currentViewport ?? undefined, {
     enabled: active,
+    refetchInterval: 10000,
   });
 
   // Sync React Query updates into live fleet

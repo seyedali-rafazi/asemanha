@@ -52,7 +52,7 @@ function AircraftListPage() {
     isLoading: aircraftLoading,
     isFetching: aircraftFetching,
     refetch: refetchAircraft,
-  } = useAircraftListQuery();
+  } = useAircraftListQuery(undefined, { refetchInterval: 15000 });
 
   const {
     data: stats,

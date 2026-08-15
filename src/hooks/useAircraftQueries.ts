@@ -56,8 +56,7 @@ export function useAircraftListQuery(
   return useQuery<AircraftListResponse, Error>({
     queryKey: queryKeys.aircraft.list(params),
     queryFn: () => fetchAircraftList(params),
-    placeholderData: keepPreviousData,
-    staleTime: 5000,
+    staleTime: 0,
     refetchInterval: 10000,
     ...options,
   });
