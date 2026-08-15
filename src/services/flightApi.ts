@@ -11,6 +11,7 @@ import type {
   AntennaListResponse,
   BackendHealthResponse,
   BboxParams,
+  CacheStatusResponse,
   FleetStats,
 } from "./types";
 
@@ -99,6 +100,13 @@ export async function fetchFlightsByAircraft(
   return apiClient<AirLabsFlight[]>(
     `/flights/aircraft/${encodeURIComponent(icao24)}`
   );
+}
+
+/**
+ * Check backend aircraft cache status & sync timer
+ */
+export async function fetchCacheStatus(): Promise<CacheStatusResponse> {
+  return apiClient<CacheStatusResponse>("/aircraft/cache/status");
 }
 
 /**

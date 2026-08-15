@@ -117,6 +117,35 @@ export interface BackendHealthResponse {
   provider?: string;
   airlabs_configured?: boolean;
   cache_ttl_seconds: number;
+  total_cached_aircraft?: number;
+  daily_requests_used?: number;
+  daily_requests_limit?: number;
+  daily_quota_remaining?: number;
+  sync_interval_hours?: number;
+  last_sync_timestamp?: number;
+  next_sync_in_seconds?: number;
+}
+
+export interface CacheStatusResponse {
+  status: string;
+  provider: string;
+  mode: string;
+  total_cached_aircraft: number;
+  is_using_sample_fallback: boolean;
+  last_sync_timestamp: number;
+  last_sync_iso: string | null;
+  cache_age_seconds: number;
+  cache_age_minutes: number;
+  next_sync_timestamp: number;
+  next_sync_in_seconds: number;
+  next_sync_in_minutes: number;
+  sync_interval_seconds: number;
+  sync_interval_hours: number;
+  daily_requests_used: number;
+  daily_requests_limit: number;
+  daily_quota_remaining: number;
+  last_sync_status: string;
+  last_sync_message: string;
 }
 
 export interface AircraftQueryParams {
