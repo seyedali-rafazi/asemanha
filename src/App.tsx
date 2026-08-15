@@ -8,13 +8,16 @@ import {
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { store } from "./store";
+import { queryClient } from "./services/queryClient";
 import SettingsPanel from "./pages/Settings/SettingsPanel";
 import AppShell from "./components/layout/AppShell";
 import { SidebarProvider } from "./components/utils/Sidebar/SidebarProvider";
 import TracksPanel from "./pages/Home/components/AircraftLayer/components/TracksPanel/TracksPanel";
 import { AircraftProvider } from "./pages/Home/components/AircraftLayer/context/AircraftContext";
+import { LiveAircraftProvider } from "./pages/Home/components/AircraftLayer/context/LiveAircraftContext";
 import LayersPanel from "./pages/Home/components/LayersPanel/LayersPanel";
 import { MapLayersProvider } from "./pages/Home/context/MapLayersContext";
 import AircraftDetailPage from "./pages/Aircraft/AircraftDetailPage";
@@ -92,21 +95,25 @@ export default function App() {
       <Toaster richColors position="top-right" />
       <CssBaseline />
       <ThemeProvider theme={theme}>
-        <Provider store={store}>
-          <AircraftProvider>
-            <MapLayersProvider>
-              <SidebarProvider config={sidebarConfig}>
-                <Routes>
-                  <Route element={<AppShell />}>
-                    <Route index element={null} />
-                    <Route path="airplane" element={<AircraftListPage />} />
-                    <Route path="airplane/:id" element={<AircraftDetailPage />} />
-                  </Route>
-                </Routes>
-              </SidebarProvider>
-            </MapLayersProvider>
-          </AircraftProvider>
-        </Provider>
+        <QueryClientProvider client={queryClient}>
+          <Provider store={store}>
+            <LiveAircraftProvider>
+              <AircraftProvider>
+                <MapLayersProvider>
+                  <SidebarProvider config={sidebarConfig}>
+                    <Routes>
+                      <Route element={<AppShell />}>
+                        <Route index element={null} />
+                        <Route path="airplane" element={<AircraftListPage />} />
+                        <Route path="airplane/:id" element={<AircraftDetailPage />} />
+                      </Route>
+                    </Routes>
+                  </SidebarProvider>
+                </MapLayersProvider>
+              </AircraftProvider>
+            </LiveAircraftProvider>
+          </Provider>
+        </QueryClientProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

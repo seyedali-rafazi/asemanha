@@ -3,30 +3,42 @@ import {
   ArrowBack,
   Explore,
   Flight,
+  FlightLand,
+  FlightTakeoff,
+  History,
   LocationOn,
+  Radio,
+  Refresh,
   Route,
   Schedule,
+  Sensors,
   Speed,
   Terrain,
+  VerticalAlignTop,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Divider,
   Fade,
   Grow,
   IconButton,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import { useMemo, type ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import aircraftData from "../Home/components/AircraftLayer/data/iran_aircraft_50.json";
-import type { Aircraft } from "../Home/components/AircraftLayer/types/Aircraft";
 import AircraftThumb from "../Home/components/AircraftLayer/components/AircraftThumb";
+import {
+  useAircraftDetailQuery,
+  useAircraftTrackQuery,
+  useFlightsByAircraftQuery,
+} from "../../hooks/useAircraftQueries";
+import type { AircraftDetail } from "../../services/types";
 
-const allAircraft = aircraftData as Aircraft[];
 const pageMuted = "rgba(255,255,255,0.55)";
 const pageText = "rgba(255,255,255,0.92)";
 
@@ -71,10 +83,53 @@ export default function AircraftDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const aircraft = useMemo(
-    () => allAircraft.find((a) => a.id === id) ?? null,
-    [id]
-  );
+  const {
+    data: detailData,
+    isLoading: detailLoading,
+    isFetching: detailFetching,
+    refetch: refetchDetail,
+  } = useAircraftDetailQuery(id);
+
+  const {
+    data: trackData,
+    refetch: refetchTrack,
+  } = useAircraftTrackQuery(id);
+
+  const {
+    data: flightHistoryData,
+    refetch: refetchHistory,
+  } = useFlightsByAircraftQuery(id);
+
+  const aircraft: AircraftDetail | null = detailData ?? null;
+  const isLive = Boolean(detailData);
+  const flightHistory = flightHistoryData || [];
+  const loading = detailLoading || detailFetching;
+
+  const loadAircraftDetails = useCallback(() => {
+    refetchDetail();
+    refetchTrack();
+    refetchHistory();
+  }, [refetchDetail, refetchTrack, refetchHistory]);
+
+  if (loading && !aircraft) {
+    return (
+      <Box
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 2,
+        }}
+      >
+        <CircularProgress sx={{ color: "primary.main" }} />
+        <Typography variant="body2" color="text.secondary">
+          Fetching live aircraft telemetry...
+        </Typography>
+      </Box>
+    );
+  }
 
   if (!aircraft) {
     return (
@@ -89,7 +144,7 @@ export default function AircraftDetailPage() {
         }}
       >
         <Typography variant="h6" color="text.secondary">
-          Aircraft not found
+          Live aircraft '{id}' not found in active airspace reports
         </Typography>
         <Button variant="outlined" onClick={() => navigate("/airplane")}>
           Back to Fleet
@@ -98,8 +153,22 @@ export default function AircraftDetailPage() {
     );
   }
 
-  const lastUpdate = new Date(aircraft.lastUpdate).toLocaleString();
+  const lastUpdate = aircraft.lastUpdate
+    ? new Date(aircraft.lastUpdate).toLocaleString()
+    : "Live";
   const headingLabel = `${aircraft.heading_deg}°`;
+  const verticalRate = aircraft.vertical_rate_fpm
+    ? `${aircraft.vertical_rate_fpm > 0 ? "+" : ""}${aircraft.vertical_rate_fpm} fpm`
+    : "Level Flight";
+
+  // Use waypoints from track if available, else aircraft path
+  const waypoints = trackData?.waypoints?.length
+    ? trackData.waypoints
+    : (aircraft.path || []).map((p) => ({
+        lat: p[0],
+        lon: p[1],
+        altitude_ft: aircraft.altitude_ft,
+      }));
 
   return (
     <Box
@@ -109,7 +178,13 @@ export default function AircraftDetailPage() {
         bgcolor: "background.default",
       }}
     >
-      <Box sx={{ position: "relative", height: { xs: 220, md: 300 }, overflow: "hidden" }}>
+      <Box
+        sx={{
+          position: "relative",
+          height: { xs: 220, md: 300 },
+          overflow: "hidden",
+        }}
+      >
         <AircraftThumb
           aircraftType={aircraft.aircraftType}
           iconSize={340}
@@ -142,6 +217,28 @@ export default function AircraftDetailPage() {
         >
           <ArrowBack />
         </IconButton>
+
+        <Tooltip title="Refresh telemetry">
+          <IconButton
+            onClick={loadAircraftDetails}
+            disabled={loading}
+            sx={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              bgcolor: "rgba(0,0,0,0.5)",
+              color: "#fff",
+              "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
+            }}
+          >
+            {loading ? (
+              <CircularProgress size={18} sx={{ color: "primary.main" }} />
+            ) : (
+              <Refresh fontSize="small" />
+            )}
+          </IconButton>
+        </Tooltip>
+
         <Fade in timeout={600}>
           <Box sx={{ position: "absolute", bottom: 24, left: 24, right: 24 }}>
             <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
@@ -154,9 +251,21 @@ export default function AircraftDetailPage() {
                 size="small"
                 sx={{ bgcolor: "primary.main", color: "#fff", fontWeight: 600 }}
               />
+              <Chip
+                label={isLive ? "Live ADS-B" : "Airspace Record"}
+                size="small"
+                sx={{
+                  bgcolor: isLive ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.1)",
+                  color: isLive ? "#4ade80" : "#fff",
+                  fontWeight: 600,
+                  fontSize: "0.65rem",
+                  height: 22,
+                }}
+              />
             </Stack>
             <Typography variant="body1" color="rgba(255,255,255,0.75)">
-              {aircraft.airline} · {aircraft.id}
+              {aircraft.airline} · {aircraft.id.toUpperCase()}{" "}
+              {aircraft.country ? `· ${aircraft.country}` : ""}
             </Typography>
           </Box>
         </Fade>
@@ -202,12 +311,16 @@ export default function AircraftDetailPage() {
         </Fade>
 
         <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5, color: pageText }}>
-          Flight Telemetry
+          Live Flight Telemetry
         </Typography>
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" },
+            gridTemplateColumns: {
+              xs: "1fr 1fr",
+              sm: "repeat(3, 1fr)",
+              md: "repeat(6, 1fr)",
+            },
             gap: 1.5,
             mb: 3,
           }}
@@ -220,24 +333,37 @@ export default function AircraftDetailPage() {
           />
           <InfoBlock
             icon={<Speed sx={{ fontSize: 18, color: "primary.main" }} />}
-            label="Ground Speed"
+            label="Speed"
             value={`${aircraft.speed_kts} kts`}
-            delay={80}
+            delay={60}
           />
           <InfoBlock
             icon={<Route sx={{ fontSize: 18, color: "primary.main" }} />}
             label="Heading"
             value={headingLabel}
-            delay={160}
+            delay={120}
+          />
+          <InfoBlock
+            icon={<VerticalAlignTop sx={{ fontSize: 18, color: "primary.main" }} />}
+            label="Vert. Rate"
+            value={verticalRate}
+            delay={180}
+          />
+          <InfoBlock
+            icon={<Radio sx={{ fontSize: 18, color: "primary.main" }} />}
+            label="Squawk"
+            value={aircraft.squawk || "1200"}
+            delay={240}
           />
           <InfoBlock
             icon={<Schedule sx={{ fontSize: 18, color: "primary.main" }} />}
             label="Last Update"
             value={lastUpdate}
-            delay={240}
+            delay={300}
           />
         </Box>
 
+        {/* Current Position & Waypoint Trajectory */}
         <Fade in timeout={900}>
           <Box
             sx={{
@@ -251,43 +377,51 @@ export default function AircraftDetailPage() {
             <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
               <LocationOn sx={{ color: "primary.main" }} />
               <Typography variant="subtitle2" fontWeight={700} sx={{ color: pageText }}>
-                Current Position
+                Current Coordinates & Sensors
               </Typography>
             </Stack>
             <Typography variant="body2" sx={{ color: pageMuted }} gutterBottom>
               Latitude: {aircraft.lat.toFixed(4)}° · Longitude: {aircraft.lon.toFixed(4)}°
+              {aircraft.position_source ? ` · Source: ${aircraft.position_source}` : ""}
             </Typography>
             <Divider sx={{ my: 1.5 }} />
             <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ color: pageText }}>
-              Flight Path Waypoints ({aircraft.path.length})
+              Trajectory Waypoints ({waypoints.length})
             </Typography>
-            <Stack spacing={0.75} sx={{ mt: 1 }}>
-              {aircraft.path.map((point, i) => (
-                <Grow in key={i} timeout={400 + i * 50}>
+            <Stack spacing={0.75} sx={{ mt: 1, maxHeight: 220, overflow: "auto" }}>
+              {waypoints.map((point, i) => (
+                <Grow in key={i} timeout={300 + i * 30}>
                   <Box
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 1.5,
+                      justifyContent: "space-between",
                       py: 0.75,
                       px: 1.5,
                       borderRadius: 1.5,
                       bgcolor: "rgba(255,255,255,0.06)",
                     }}
                   >
-                    <Chip
-                      label={i + 1}
-                      size="small"
-                      sx={{
-                        width: 28,
-                        height: 24,
-                        fontSize: "0.7rem",
-                        bgcolor: "primary.main",
-                        color: "#fff",
-                      }}
-                    />
-                    <Typography variant="body2" sx={{ color: pageText }}>
-                      {point[0].toFixed(3)}°, {point[1].toFixed(3)}°
+                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                      <Chip
+                        label={i + 1}
+                        size="small"
+                        sx={{
+                          width: 28,
+                          height: 24,
+                          fontSize: "0.7rem",
+                          bgcolor: "primary.main",
+                          color: "#fff",
+                        }}
+                      />
+                      <Typography variant="body2" sx={{ color: pageText }}>
+                        {point.lat.toFixed(3)}°, {point.lon.toFixed(3)}°
+                      </Typography>
+                    </Stack>
+                    <Typography variant="caption" sx={{ color: pageMuted }}>
+                      {point.altitude_ft
+                        ? `${point.altitude_ft.toLocaleString()} ft`
+                        : `${aircraft.altitude_ft.toLocaleString()} ft`}
                     </Typography>
                   </Box>
                 </Grow>
@@ -296,6 +430,7 @@ export default function AircraftDetailPage() {
           </Box>
         </Fade>
 
+        {/* Extended Technical Details */}
         <Fade in timeout={1000}>
           <Box
             sx={{
@@ -303,19 +438,25 @@ export default function AircraftDetailPage() {
               borderRadius: 2,
               bgcolor: "#1d1f20",
               border: "1px solid rgba(255,255,255,0.08)",
+              mb: 3,
             }}
           >
-            <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ color: pageText }}>
-              Aircraft Details
-            </Typography>
+            <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+              <Sensors sx={{ color: "primary.main", fontSize: 20 }} />
+              <Typography variant="subtitle2" fontWeight={700} sx={{ color: pageText }}>
+                Transponder & Technical Specifications
+              </Typography>
+            </Stack>
             <Stack spacing={1} sx={{ mt: 1.5 }}>
               {[
-                ["Flight ID", aircraft.id],
+                ["Transponder Hex (ICAO24)", aircraft.id.toUpperCase()],
                 ["Callsign", aircraft.callsign],
-                ["Airline", aircraft.airline],
+                ["Airline / Operator", aircraft.airline],
                 ["Aircraft Type", aircraft.aircraftType],
-                ["Origin", aircraft.origin_city],
-                ["Destination", aircraft.destination_city],
+                ["Origin Country", aircraft.country || "Iran"],
+                ["Squawk Mode A/C", aircraft.squawk || "1200"],
+                ["Position Source", aircraft.position_source || "ADS-B Transponder"],
+                ["Flight Status", aircraft.on_ground ? "On Ground" : "En Route (Airborne)"],
               ].map(([label, value], i) => (
                 <Box
                   key={label}
@@ -324,7 +465,7 @@ export default function AircraftDetailPage() {
                     justifyContent: "space-between",
                     py: 0.75,
                     borderBottom:
-                      i < 5 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                      i < 7 ? "1px solid rgba(255,255,255,0.06)" : "none",
                   }}
                 >
                   <Typography variant="body2" sx={{ color: pageMuted }}>
@@ -338,6 +479,52 @@ export default function AircraftDetailPage() {
             </Stack>
           </Box>
         </Fade>
+
+        {/* Flight History if available from AirLabs */}
+        {flightHistory.length > 0 && (
+          <Fade in timeout={1100}>
+            <Box
+              sx={{
+                p: 2.5,
+                borderRadius: 2,
+                bgcolor: "#1d1f20",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+                <History sx={{ color: "primary.main", fontSize: 20 }} />
+                <Typography variant="subtitle2" fontWeight={700} sx={{ color: pageText }}>
+                  Recent Flight Operations (AirLabs)
+                </Typography>
+              </Stack>
+              <Stack spacing={1}>
+                {flightHistory.slice(0, 5).map((f, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 1.5,
+                      bgcolor: "rgba(255,255,255,0.04)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <FlightTakeoff sx={{ fontSize: 16, color: "primary.main" }} />
+                      <Typography variant="body2" sx={{ color: pageText }}>
+                        {f.dep_iata || f.dep_icao || "Origin"} → {f.arr_iata || f.arr_icao || "Destination"}
+                      </Typography>
+                    </Stack>
+                    <Typography variant="caption" sx={{ color: pageMuted }}>
+                      {f.updated ? new Date(f.updated * 1000).toLocaleDateString() : "Active"}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          </Fade>
+        )}
       </Box>
     </Box>
   );

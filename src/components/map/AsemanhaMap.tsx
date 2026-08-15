@@ -14,6 +14,7 @@ import { useAppSelector } from "../../store/hooks";
 import { getMapStyleUrl } from "../../store/mapStyles";
 import MapFlatViewEnforcer from "./components/MapFlatViewEnforcer/MapFlatViewEnforcer";
 import MapStyleSynchronizer from "./components/MapStyleSynchronizer/MapStyleSynchronizer";
+import MapViewportSync from "./components/MapViewportSync/MapViewportSync";
 import { MapToolProvider } from "./context/MapToolContext";
 import { AccordionGroupProvider } from "../utils/MapTools/AccordionGroupContext";
 import MapAircraftBadge from "../../pages/Home/components/MapAircraftBadge/MapAircraftBadge";
@@ -94,6 +95,7 @@ const MapboxMap: FC<MapboxMapProps> = ({ children }) => {
         <MapFlatViewEnforcer />
         <MapStyleSynchronizer />
         <MapResizeHandler />
+        <MapViewportSync />
         {/* ✅ Mapbox-native Dark Shadow Layer */}
         {/* This creates the shadow INSIDE the map context, allowing your Deck.gl layer to sit on top */}
         <Source

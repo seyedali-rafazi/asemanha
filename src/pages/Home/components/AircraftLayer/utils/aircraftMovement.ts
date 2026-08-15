@@ -136,59 +136,74 @@ export function advanceAircraftSim(
   speedKts: number,
   deltaSeconds: number
 ): AircraftSimState {
-  if (route.length < 2) {
-    return state;
-  }
-
   let distanceNm = (speedKts / 3600) * deltaSeconds;
-  let { lat, lon, segmentIndex, progress } = state;
+  if (distanceNm <= 0) return state;
 
-  while (distanceNm > 0 && segmentIndex < route.length - 1) {
-    const [lat1, lon1] = route[segmentIndex];
-    const [lat2, lon2] = route[segmentIndex + 1];
-    const segLen = haversineNm(lat1, lon1, lat2, lon2);
+  let { lat, lon, segmentIndex, progress, heading_deg } = state;
 
-    if (segLen === 0) {
-      segmentIndex++;
-      progress = 0;
-      continue;
+  if (route.length >= 2 && segmentIndex < route.length - 1) {
+    while (distanceNm > 0 && segmentIndex < route.length - 1) {
+      const [lat1, lon1] = route[segmentIndex];
+      const [lat2, lon2] = route[segmentIndex + 1];
+      const segLen = haversineNm(lat1, lon1, lat2, lon2);
+
+      if (segLen === 0) {
+        segmentIndex++;
+        progress = 0;
+        continue;
+      }
+
+      const remainingOnSeg = segLen * (1 - progress);
+
+      if (distanceNm >= remainingOnSeg) {
+        distanceNm -= remainingOnSeg;
+        lat = lat2;
+        lon = lon2;
+        segmentIndex++;
+        progress = 0;
+
+        if (segmentIndex >= route.length - 1) {
+          break;
+        }
+      } else {
+        progress += distanceNm / segLen;
+        const next = interpolateLatLon(lat1, lon1, lat2, lon2, progress);
+        lat = next.lat;
+        lon = next.lon;
+        distanceNm = 0;
+      }
     }
 
-    const remainingOnSeg = segLen * (1 - progress);
-
-    if (distanceNm >= remainingOnSeg) {
-      distanceNm -= remainingOnSeg;
-      lat = lat2;
-      lon = lon2;
-      segmentIndex++;
-      progress = 0;
-
-      if (segmentIndex >= route.length - 1) {
-        break;
+    if (segmentIndex < route.length - 1) {
+      const nextIdx = segmentIndex + 1;
+      const computedHeading = bearingDeg(
+        lat,
+        lon,
+        route[nextIdx][0],
+        route[nextIdx][1]
+      );
+      if (!isNaN(computedHeading)) {
+        heading_deg = Math.round(computedHeading) % 360;
       }
-    } else {
-      progress += distanceNm / segLen;
-      const next = interpolateLatLon(lat1, lon1, lat2, lon2, progress);
-      lat = next.lat;
-      lon = next.lon;
-      distanceNm = 0;
     }
   }
 
-  const nextIdx = Math.min(segmentIndex + 1, route.length - 1);
-  const heading = bearingDeg(
-    lat,
-    lon,
-    route[nextIdx][0],
-    route[nextIdx][1]
-  );
+  // If there is leftover distance (reached end of route or route < 2), dead reckon along current heading
+  if (distanceNm > 0) {
+    const headingRad = (heading_deg * Math.PI) / 180;
+    const dLat = (distanceNm / 60) * Math.cos(headingRad);
+    const cosLat = Math.max(0.01, Math.cos((lat * Math.PI) / 180));
+    const dLon = (distanceNm / (60 * cosLat)) * Math.sin(headingRad);
+    lat += dLat;
+    lon += dLon;
+  }
 
   return {
     lat,
     lon,
-    heading_deg: Math.round(heading) % 360,
-    segmentIndex: Math.min(segmentIndex, route.length - 2),
-    progress,
+    heading_deg,
+    segmentIndex: route.length >= 2 ? Math.min(segmentIndex, route.length - 2) : 0,
+    progress: Math.min(1, Math.max(0, progress)),
   };
 }
 

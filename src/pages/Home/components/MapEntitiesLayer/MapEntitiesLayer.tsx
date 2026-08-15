@@ -23,7 +23,7 @@ import {
 } from "../../../../components/map/context/MapToolContext";
 
 const MapEntitiesLayer = () => {
-  const { isItemVisible, selectEntity } = useMapLayers();
+  const { isItemVisible, selectEntity, airports, antennas } = useMapLayers();
   const { tracks } = useAircraft();
   const liveAircraft = useLiveAircraftSnapshot();
   const { getTrackPath } = useLiveAircraftEngine();
@@ -40,20 +40,15 @@ const MapEntitiesLayer = () => {
   );
 
   const visibleAirports = useMemo(
-    () =>
-      (airportData as Airport[]).filter((a) =>
-        isItemVisible("airports", a.id)
-      ),
-    [isItemVisible]
+    () => airports.filter((a) => isItemVisible("airports", a.id)),
+    [airports, isItemVisible]
   );
 
   const visibleAntennas = useMemo(
-    () =>
-      (antennaData as Antenna[]).filter((a) =>
-        isItemVisible("antennas", a.id)
-      ),
-    [isItemVisible]
+    () => antennas.filter((a) => isItemVisible("antennas", a.id)),
+    [antennas, isItemVisible]
   );
+
 
   const handleAircraftClick = useCallback(
     (aircraft: Aircraft) => selectEntity("airplanes", aircraft.id),

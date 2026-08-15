@@ -1,7 +1,6 @@
 import { Box } from "@mui/material";
 import { useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { LiveAircraftProvider } from "../../pages/Home/components/AircraftLayer/context/LiveAircraftContext";
 import HomePage from "../../pages/Home/Home";
 
 /**
@@ -28,9 +27,7 @@ export default function AppShell() {
             pointerEvents: isHome ? "auto" : "none",
           }}
         >
-          <LiveAircraftProvider active={isHome}>
-            <HomePage mapActive={isHome} />
-          </LiveAircraftProvider>
+          <HomePage mapActive={isHome} />
         </Box>
       )}
 

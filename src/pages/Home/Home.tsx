@@ -25,7 +25,7 @@ const HomePage = ({ mapActive = true }: HomePageProps) => {
   }, [searchParams, focusEntity, setSearchParams]);
 
   return (
-    <Box sx={{ width: "100%", height: "100%" }}>
+    <Box sx={{ width: "100%", height: "100%", position: "relative" }}>
       <MapboxMap>
         <MapActivityController active={mapActive} />
         <MapFocusController />
@@ -47,3 +47,4 @@ const HomePage = ({ mapActive = true }: HomePageProps) => {
 };
 
 export default HomePage;
+

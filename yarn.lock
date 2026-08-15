@@ -731,6 +731,30 @@
   resolved "https://registry.npmjs.org/@standard-schema/utils/-/utils-0.3.0.tgz"
   integrity sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==
 
+"@tanstack/query-core@5.101.4":
+  version "5.101.4"
+  resolved "https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.101.4.tgz"
+  integrity sha512-gNwcvOJcRbLWPOLG/2OBm+zM+Yv+MKsXKEOWC57USuZDEsI71hEErQsiEGx5wX9rzWWkfwM0fVSPoiIFSsxfiw==
+
+"@tanstack/react-query@^5.101.4":
+  version "5.101.4"
+  resolved "https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.101.4.tgz"
+  integrity sha512-yRg2pfOCxIs4ZJW3XYYHU/WgtD04FHSnfHlpRT7h7pR77hwkdRG4wxbKe4aq6P0RvXUTBSQpQeadS1SUYUe+KA==
+  dependencies:
+    "@tanstack/query-core" "5.101.4"
+
+"@tanstack/react-virtual@^3.14.9":
+  version "3.14.9"
+  resolved "https://registry.npmjs.org/@tanstack/react-virtual/-/react-virtual-3.14.9.tgz"
+  integrity sha512-qZyr0FZDP8rDC4WBhsryIZmAd9bveJvFGUJJtskWaew6/0dTRS6wZxnR6VQ5bY2KwL3LjerrHqQLk3a0GKcPXQ==
+  dependencies:
+    "@tanstack/virtual-core" "3.17.7"
+
+"@tanstack/virtual-core@3.17.7":
+  version "3.17.7"
+  resolved "https://registry.npmjs.org/@tanstack/virtual-core/-/virtual-core-3.17.7.tgz"
+  integrity sha512-bp+v10y65sp2H7WpWfIMyxTNfl8ZVfxFTLRjPIFRryi6FV/J33z4IS53WO4pTk36KlvJ4iLiQz+oaydDC1xbcA==
+
 "@types/babel__core@^7.20.5":
   version "7.20.5"
   resolved "https://registry.npmjs.org/@types/babel__core/-/babel__core-7.20.5.tgz"
@@ -2013,7 +2037,7 @@ quickselect@^3.0.0:
   resolved "https://registry.npmjs.org/quickselect/-/quickselect-3.0.0.tgz"
   integrity sha512-XdjUArbK4Bm5fLLvlm5KpTFOiOThgfWWI4axAZDWg4E/0mKdZyI9tNEfds27qCi1ze/vwTR16kvmmGhRra3c2g==
 
-"react-dom@^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom@^18.0.0 || ^19.0.0 || ^19.0.0-rc", react-dom@^19.2.4, react-dom@>=16.3.0, react-dom@>=16.6.0, react-dom@>=18:
+"react-dom@^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom@^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom@^18.0.0 || ^19.0.0 || ^19.0.0-rc", react-dom@^19.2.4, react-dom@>=16.3.0, react-dom@>=16.6.0, react-dom@>=18:
   version "19.2.4"
   resolved "https://registry.npmjs.org/react-dom/-/react-dom-19.2.4.tgz"
   integrity sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ==
@@ -2076,7 +2100,7 @@ react-transition-group@^4.4.5:
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
 
-"react@^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react@^16.9.0 || ^17.0.0 || ^18 || ^19", "react@^17.0.0 || ^18.0.0 || ^19.0.0", "react@^18.0 || ^19", "react@^18.0.0 || ^19.0.0 || ^19.0.0-rc", react@^19.2.4, react@>=16.3.0, react@>=16.6.0, react@>=16.8.0, react@>=18:
+"react@^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react@^16.9.0 || ^17.0.0 || ^18 || ^19", "react@^17.0.0 || ^18.0.0 || ^19.0.0", "react@^18 || ^19", "react@^18.0 || ^19", "react@^18.0.0 || ^19.0.0 || ^19.0.0-rc", react@^19.2.4, react@>=16.3.0, react@>=16.6.0, react@>=16.8.0, react@>=18:
   version "19.2.4"
   resolved "https://registry.npmjs.org/react/-/react-19.2.4.tgz"
   integrity sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==

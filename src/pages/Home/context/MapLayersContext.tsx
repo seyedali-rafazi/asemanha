@@ -2,17 +2,22 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
-import { BASE_AIRCRAFT } from "../components/AircraftLayer/data/aircraftFleet";
 import airportData from "../components/AirportLayer/data/iran_airports.json";
 import antennaData from "../components/AntennaLayer/data/iran_antennas.json";
 import type { Aircraft } from "../components/AircraftLayer/types/Aircraft";
 import type { Airport } from "../components/AirportLayer/types/Airport";
 import type { Antenna } from "../components/AntennaLayer/types/Antenna";
+import {
+  useLiveAircraftEngine,
+  useLiveAircraftSnapshot,
+} from "../components/AircraftLayer/context/LiveAircraftContext";
+import { useAirportsQuery, useAntennasQuery } from "../../../hooks/useAircraftQueries";
 
 export type LayerCategory = "airplanes" | "airports" | "antennas";
 
@@ -45,21 +50,51 @@ interface MapLayersContextValue {
 const MapLayersContext = createContext<MapLayersContextValue | null>(null);
 
 function buildDefaultVisibility(
-  airplanes: Aircraft[],
   airports: Airport[],
   antennas: Antenna[]
 ): ItemVisibility {
   return {
-    airplanes: Object.fromEntries(airplanes.map((a) => [a.id, true])),
+    airplanes: {},
     airports: Object.fromEntries(airports.map((a) => [a.id, true])),
     antennas: Object.fromEntries(antennas.map((a) => [a.id, true])),
   };
 }
 
 export function MapLayersProvider({ children }: { children: ReactNode }) {
-  const airplanes = BASE_AIRCRAFT;
-  const airports = airportData as Airport[];
-  const antennas = antennaData as Antenna[];
+  const liveAirplanes = useLiveAircraftSnapshot();
+  const { getAircraftById } = useLiveAircraftEngine();
+
+  const [airports, setAirports] = useState<Airport[]>(() => airportData as Airport[]);
+  const [antennas, setAntennas] = useState<Antenna[]>(() => antennaData as Antenna[]);
+
+  const airportsQuery = useAirportsQuery();
+  const antennasQuery = useAntennasQuery();
+
+  useEffect(() => {
+    if (airportsQuery.data && airportsQuery.data.length > 0) {
+      setAirports(airportsQuery.data);
+      setItemVisibility((prev) => ({
+        ...prev,
+        airports: {
+          ...Object.fromEntries(airportsQuery.data!.map((a) => [a.id, true])),
+          ...prev.airports,
+        },
+      }));
+    }
+  }, [airportsQuery.data]);
+
+  useEffect(() => {
+    if (antennasQuery.data && antennasQuery.data.length > 0) {
+      setAntennas(antennasQuery.data);
+      setItemVisibility((prev) => ({
+        ...prev,
+        antennas: {
+          ...Object.fromEntries(antennasQuery.data!.map((a) => [a.id, true])),
+          ...prev.antennas,
+        },
+      }));
+    }
+  }, [antennasQuery.data]);
 
   const [activeCategory, setActiveCategory] =
     useState<LayerCategory>("airplanes");
@@ -71,7 +106,7 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
     antennas: true,
   });
   const [itemVisibility, setItemVisibility] = useState<ItemVisibility>(() =>
-    buildDefaultVisibility(airplanes, airports, antennas)
+    buildDefaultVisibility(airportData as Airport[], antennaData as Antenna[])
   );
   const [searchQuery, setSearchQueryState] = useState<
     Record<LayerCategory, string>
@@ -104,7 +139,7 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
         ...prev,
         [category]: {
           ...prev[category],
-          [id]: !prev[category][id],
+          [id]: !(prev[category]?.[id] ?? true),
         },
       }));
     },
@@ -114,7 +149,7 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
   const isItemVisible = useCallback(
     (category: LayerCategory, id: string) => {
       if (!categoryEnabled[category]) return false;
-      return itemVisibility[category][id] ?? true;
+      return itemVisibility[category]?.[id] ?? true;
     },
     [categoryEnabled, itemVisibility]
   );
@@ -124,7 +159,7 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
       setItemVisibility((prev) => ({
         ...prev,
         [category]: Object.fromEntries(
-          Object.keys(prev[category]).map((id) => [id, visible])
+          Object.keys(prev[category] || {}).map((id) => [id, visible])
         ),
       }));
     },
@@ -141,14 +176,14 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
   const getEntityData = useCallback(
     (category: LayerCategory, id: string): MapEntity | null => {
       if (category === "airplanes") {
-        return airplanes.find((a) => a.id === id) ?? null;
+        return getAircraftById(id) || liveAirplanes.find((a) => a.id === id) || null;
       }
       if (category === "airports") {
         return airports.find((a) => a.id === id) ?? null;
       }
       return antennas.find((a) => a.id === id) ?? null;
     },
-    [airplanes, airports, antennas]
+    [getAircraftById, liveAirplanes, airports, antennas]
   );
 
   const selectEntity = useCallback(
@@ -194,7 +229,7 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
       focusEntity,
       getEntityData,
       getSelectedEntityData,
-      airplanes,
+      airplanes: liveAirplanes,
       airports,
       antennas,
     }),
@@ -214,7 +249,7 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
       focusEntity,
       getEntityData,
       getSelectedEntityData,
-      airplanes,
+      liveAirplanes,
       airports,
       antennas,
     ]
