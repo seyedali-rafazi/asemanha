@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Grid,
   IconButton,
+  Skeleton,
   Stack,
   Tooltip,
   Typography,
@@ -64,8 +65,74 @@ function AircraftListPage() {
   }, [aircraftResponse]);
 
   const isCached = aircraftResponse?.cached ?? false;
-  const lastSync = aircraftResponse?.time ? new Date(aircraftResponse.time * 1000) : null;
+  const lastSync = aircraftResponse?.time
+    ? new Date(aircraftResponse.time * 1000)
+    : stats?.timestamp
+    ? new Date(stats.timestamp * 1000)
+    : null;
   const loading = aircraftLoading || aircraftFetching;
+
+  // Compute live real metrics directly from the backend aircraft telemetry
+  const metrics = useMemo(() => {
+    const totalCount =
+      aircraftResponse?.total ?? (stats?.total_aircraft ?? allAircraft.length);
+
+    if (allAircraft.length > 0) {
+      // Aircraft is airborne if on_ground is explicitly false or altitude is above 500 ft
+      const airborneAircraft = allAircraft.filter(
+        (a) => !a.on_ground && (a.altitude_ft ?? 0) > 500
+      );
+      const onGroundAircraft = allAircraft.filter(
+        (a) => a.on_ground || (a.altitude_ft ?? 0) <= 500
+      );
+
+      const airborne = stats?.airborne ?? airborneAircraft.length;
+      const onGround = stats?.on_ground ?? onGroundAircraft.length;
+
+      // Real average altitude calculated directly from active airborne/flying flights
+      const altFlights =
+        airborneAircraft.length > 0
+          ? airborneAircraft.filter((a) => (a.altitude_ft ?? 0) > 0)
+          : allAircraft.filter((a) => (a.altitude_ft ?? 0) > 0);
+
+      const computedAvgAlt =
+        altFlights.length > 0
+          ? Math.round(
+              altFlights.reduce((sum, a) => sum + (a.altitude_ft || 0), 0) /
+                altFlights.length
+            )
+          : 0;
+      const avgAltitude = stats?.avg_altitude_ft || computedAvgAlt;
+
+      // Real average speed calculated directly from flights with speed telemetry
+      const spdFlights = allAircraft.filter((a) => (a.speed_kts ?? 0) > 0);
+      const computedAvgSpd =
+        spdFlights.length > 0
+          ? Math.round(
+              spdFlights.reduce((sum, a) => sum + (a.speed_kts || 0), 0) /
+                spdFlights.length
+            )
+          : 0;
+      const avgSpeed = stats?.avg_speed_kts || computedAvgSpd;
+
+      return {
+        total: totalCount,
+        airborne,
+        onGround,
+        avgAltitude,
+        avgSpeed,
+      };
+    }
+
+    // Fallback while awaiting response from backend
+    return {
+      total: stats?.total_aircraft ?? totalCount,
+      airborne: stats?.airborne ?? 0,
+      onGround: stats?.on_ground ?? 0,
+      avgAltitude: stats?.avg_altitude_ft ?? 0,
+      avgSpeed: stats?.avg_speed_kts ?? 0,
+    };
+  }, [allAircraft, aircraftResponse?.total, stats]);
 
   const handleRefresh = useCallback(() => {
     refetchAircraft();
@@ -135,7 +202,13 @@ function AircraftListPage() {
                   Fleet Overview
                 </Typography>
                 <Chip
-                  label={isCached ? "AirLabs Cache" : "Live AirLabs ADS-B"}
+                  label={
+                    loading && allAircraft.length === 0
+                      ? "Loading..."
+                      : isCached
+                      ? "AirLabs Cache"
+                      : "Live AirLabs ADS-B"
+                  }
                   size="small"
                   sx={{
                     bgcolor: isCached
@@ -154,7 +227,9 @@ function AircraftListPage() {
                 />
               </Stack>
               <Typography variant="body2" color="text.secondary">
-                {lastSync
+                {loading && allAircraft.length === 0
+                  ? "Connecting to backend flight telemetry..."
+                  : lastSync
                   ? `Last updated at ${lastSync.toLocaleTimeString()}`
                   : "Live ADS-B real-time flight telemetry"}
               </Typography>
@@ -200,13 +275,22 @@ function AircraftListPage() {
                   Total Fleet
                 </Typography>
               </Stack>
-              <Typography
-                variant="h5"
-                fontWeight={700}
-                sx={{ mt: 0.5, color: "rgba(255,255,255,0.92)" }}
-              >
-                {stats?.total_aircraft ?? allAircraft.length}
-              </Typography>
+              {loading && allAircraft.length === 0 ? (
+                <Skeleton
+                  variant="text"
+                  width={60}
+                  height={32}
+                  sx={{ mt: 0.5, bgcolor: "rgba(255,255,255,0.08)" }}
+                />
+              ) : (
+                <Typography
+                  variant="h5"
+                  fontWeight={700}
+                  sx={{ mt: 0.5, color: "rgba(255,255,255,0.92)" }}
+                >
+                  {metrics.total.toLocaleString()}
+                </Typography>
+              )}
             </Box>
           </Grid>
 
@@ -225,14 +309,22 @@ function AircraftListPage() {
                   Airborne
                 </Typography>
               </Stack>
-              <Typography
-                variant="h5"
-                fontWeight={700}
-                sx={{ mt: 0.5, color: "#4ade80" }}
-              >
-                {stats?.airborne ??
-                  allAircraft.filter((a) => a.altitude_ft > 500).length}
-              </Typography>
+              {loading && allAircraft.length === 0 ? (
+                <Skeleton
+                  variant="text"
+                  width={60}
+                  height={32}
+                  sx={{ mt: 0.5, bgcolor: "rgba(255,255,255,0.08)" }}
+                />
+              ) : (
+                <Typography
+                  variant="h5"
+                  fontWeight={700}
+                  sx={{ mt: 0.5, color: "#4ade80" }}
+                >
+                  {metrics.airborne.toLocaleString()}
+                </Typography>
+              )}
             </Box>
           </Grid>
 
@@ -251,14 +343,22 @@ function AircraftListPage() {
                   On Ground
                 </Typography>
               </Stack>
-              <Typography
-                variant="h5"
-                fontWeight={700}
-                sx={{ mt: 0.5, color: "rgba(255,255,255,0.92)" }}
-              >
-                {stats?.on_ground ??
-                  allAircraft.filter((a) => a.altitude_ft <= 500).length}
-              </Typography>
+              {loading && allAircraft.length === 0 ? (
+                <Skeleton
+                  variant="text"
+                  width={60}
+                  height={32}
+                  sx={{ mt: 0.5, bgcolor: "rgba(255,255,255,0.08)" }}
+                />
+              ) : (
+                <Typography
+                  variant="h5"
+                  fontWeight={700}
+                  sx={{ mt: 0.5, color: "rgba(255,255,255,0.92)" }}
+                >
+                  {metrics.onGround.toLocaleString()}
+                </Typography>
+              )}
             </Box>
           </Grid>
 
@@ -277,15 +377,24 @@ function AircraftListPage() {
                   Avg Altitude
                 </Typography>
               </Stack>
-              <Typography
-                variant="h5"
-                fontWeight={700}
-                sx={{ mt: 0.5, color: "rgba(255,255,255,0.92)" }}
-              >
-                {stats?.avg_altitude_ft
-                  ? `${stats.avg_altitude_ft.toLocaleString()} ft`
-                  : "0 ft"}
-              </Typography>
+              {loading && allAircraft.length === 0 ? (
+                <Skeleton
+                  variant="text"
+                  width={70}
+                  height={32}
+                  sx={{ mt: 0.5, bgcolor: "rgba(255,255,255,0.08)" }}
+                />
+              ) : (
+                <Typography
+                  variant="h5"
+                  fontWeight={700}
+                  sx={{ mt: 0.5, color: "rgba(255,255,255,0.92)" }}
+                >
+                  {metrics.avgAltitude > 0
+                    ? `${metrics.avgAltitude.toLocaleString()} ft`
+                    : "—"}
+                </Typography>
+              )}
             </Box>
           </Grid>
 
@@ -304,15 +413,24 @@ function AircraftListPage() {
                   Avg Speed
                 </Typography>
               </Stack>
-              <Typography
-                variant="h5"
-                fontWeight={700}
-                sx={{ mt: 0.5, color: "rgba(255,255,255,0.92)" }}
-              >
-                {stats?.avg_speed_kts
-                  ? `${stats.avg_speed_kts} kts`
-                  : "0 kts"}
-              </Typography>
+              {loading && allAircraft.length === 0 ? (
+                <Skeleton
+                  variant="text"
+                  width={70}
+                  height={32}
+                  sx={{ mt: 0.5, bgcolor: "rgba(255,255,255,0.08)" }}
+                />
+              ) : (
+                <Typography
+                  variant="h5"
+                  fontWeight={700}
+                  sx={{ mt: 0.5, color: "rgba(255,255,255,0.92)" }}
+                >
+                  {metrics.avgSpeed > 0
+                    ? `${metrics.avgSpeed} kts`
+                    : "—"}
+                </Typography>
+              )}
             </Box>
           </Grid>
         </Grid>
