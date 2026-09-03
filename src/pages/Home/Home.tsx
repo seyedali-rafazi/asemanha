@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { useEffect } from "react";
+import { useEffect, memo } from "react";
 import { useSearchParams } from "react-router-dom";
 import AsemanhaMap from "../../components/map/AsemanhaMap";
 import MapActivityController from "../../components/map/components/MapActivityController/MapActivityController";
@@ -29,7 +29,7 @@ const HomePage = ({ mapActive = true }: HomePageProps) => {
       <AsemanhaMap>
         <MapActivityController active={mapActive} />
         <MapFocusController />
-        <MapEntitiesLayer />
+        <MapEntitiesLayer active={mapActive} />
         <Box
           sx={{
             position: "absolute",
@@ -46,5 +46,5 @@ const HomePage = ({ mapActive = true }: HomePageProps) => {
   );
 };
 
-export default HomePage;
+export default memo(HomePage);
 

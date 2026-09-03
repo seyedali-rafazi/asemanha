@@ -30,6 +30,7 @@ import {
   useMapLayers,
   type LayerCategory,
 } from "../../context/MapLayersContext";
+import { useLiveAircraftSnapshot } from "../AircraftLayer/context/LiveAircraftContext";
 
 const CATEGORY_CONFIG: Record<
   LayerCategory,
@@ -81,25 +82,25 @@ export default function LayersPanel() {
     setSearchQuery,
     selectedEntity,
     selectEntity,
-    airplanes,
     airports,
     antennas,
     getEntityData,
   } = useMapLayers();
 
+  const liveAirplanes = useLiveAircraftSnapshot();
   const parentRef = useRef<HTMLDivElement>(null);
 
   const items = useMemo(() => {
     const data =
       activeCategory === "airplanes"
-        ? airplanes
+        ? liveAirplanes
         : activeCategory === "airports"
           ? airports
           : antennas;
     return data.filter((item) =>
       matchesSearch(activeCategory, item, searchQuery[activeCategory])
     );
-  }, [activeCategory, airplanes, airports, antennas, searchQuery]);
+  }, [activeCategory, liveAirplanes, airports, antennas, searchQuery]);
 
   const visibleCount = items.filter((item) =>
     isItemVisible(activeCategory, item.id)

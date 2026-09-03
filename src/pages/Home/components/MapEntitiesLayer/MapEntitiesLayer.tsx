@@ -22,7 +22,11 @@ import {
   useMapTool,
 } from "../../../../components/map/context/MapToolContext";
 
-const MapEntitiesLayer = () => {
+interface MapEntitiesLayerProps {
+  active?: boolean;
+}
+
+const MapEntitiesLayer = ({ active = true }: MapEntitiesLayerProps) => {
   const { isItemVisible, selectEntity, airports, antennas } = useMapLayers();
   const { tracks } = useAircraft();
   const liveAircraft = useLiveAircraftSnapshot();
@@ -35,18 +39,18 @@ const MapEntitiesLayer = () => {
   const pickable = !isDrawToolActive(activeTool);
 
   const visibleAirplanes = useMemo(
-    () => liveAircraft.filter((a) => isItemVisible("airplanes", a.id)),
-    [liveAircraft, isItemVisible]
+    () => (active ? liveAircraft.filter((a) => isItemVisible("airplanes", a.id)) : []),
+    [active, liveAircraft, isItemVisible]
   );
 
   const visibleAirports = useMemo(
-    () => airports.filter((a) => isItemVisible("airports", a.id)),
-    [airports, isItemVisible]
+    () => (active ? airports.filter((a) => isItemVisible("airports", a.id)) : []),
+    [active, airports, isItemVisible]
   );
 
   const visibleAntennas = useMemo(
-    () => antennas.filter((a) => isItemVisible("antennas", a.id)),
-    [antennas, isItemVisible]
+    () => (active ? antennas.filter((a) => isItemVisible("antennas", a.id)) : []),
+    [active, antennas, isItemVisible]
   );
 
 
@@ -71,6 +75,7 @@ const MapEntitiesLayer = () => {
   );
 
   const layers = useMemo(() => {
+    if (!active) return [];
     const result = [];
 
     visibleTracks.forEach((track) => {

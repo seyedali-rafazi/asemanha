@@ -16,6 +16,7 @@ import {
   initAircraftSim,
   type AircraftSimState,
 } from "../utils/aircraftMovement";
+import { useLocation } from "react-router-dom";
 import { useAircraftListQuery } from "../../../../../hooks/useAircraftQueries";
 import {
   liveWebSocket,
@@ -41,15 +42,21 @@ interface LiveAircraftContextValue {
   isFetching: boolean;
 }
 
+interface LiveAircraftProviderProps {
+  children: ReactNode;
+  active?: boolean;
+}
+
 const LiveAircraftContext = createContext<LiveAircraftContextValue | null>(null);
 
 export function LiveAircraftProvider({
   children,
   active = true,
-}: {
-  children: ReactNode;
-  active?: boolean;
-}) {
+}: LiveAircraftProviderProps) {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+  const isEffectiveActive = Boolean(active && isHome);
+
   const listenersRef = useRef<Set<Listener>>(new Set());
   const simStatesRef = useRef<Map<string, AircraftSimState>>(new Map());
   const routesRef = useRef<Map<string, [number, number][]>>(new Map());
@@ -64,8 +71,8 @@ export function LiveAircraftProvider({
     (BboxParams & { zoom?: number }) | null
   >(null);
 
-  const activeRef = useRef(active);
-  activeRef.current = active;
+  const activeRef = useRef(isEffectiveActive);
+  activeRef.current = isEffectiveActive;
 
   const currentViewportRef = useRef(currentViewport);
   currentViewportRef.current = currentViewport;
@@ -178,7 +185,7 @@ export function LiveAircraftProvider({
   // React Query fetch whenever viewport (bbox or zoom) changes on motion/resize stop,
   // and refetch every 10 seconds for live positions
   const aircraftQuery = useAircraftListQuery(currentViewport ?? undefined, {
-    enabled: active,
+    enabled: isEffectiveActive,
     refetchInterval: 10000,
   });
 
@@ -196,6 +203,7 @@ export function LiveAircraftProvider({
   const updateViewport = useCallback((bbox: BboxParams, zoom?: number) => {
     const nextViewport = { ...bbox, zoom };
     setCurrentViewport(nextViewport);
+    currentViewportRef.current = nextViewport;
     liveWebSocket.setBbox(nextViewport);
   }, []);
 
@@ -209,7 +217,7 @@ export function LiveAircraftProvider({
 
   // WebSocket lifecycle - connects once and remains open
   useEffect(() => {
-    if (!active) return;
+    if (!isEffectiveActive) return;
 
     // Subscribe to WebSocket status & messages
     const unsubscribeStatus = liveWebSocket.onStatusChange((status) => {
@@ -229,11 +237,11 @@ export function LiveAircraftProvider({
       unsubscribeMessages();
       liveWebSocket.disconnect();
     };
-  }, [active, handleIncomingAircraft]);
+  }, [isEffectiveActive, handleIncomingAircraft]);
 
   // Smooth interpolation / simulation loop
   useEffect(() => {
-    if (!active) return;
+    if (!isEffectiveActive) return;
 
     let frameId = 0;
     let lastTime = performance.now();
@@ -281,7 +289,7 @@ export function LiveAircraftProvider({
 
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
-  }, [active, notify]);
+  }, [isEffectiveActive, notify]);
 
   const getAircraftById = useCallback(
     (id: string) =>

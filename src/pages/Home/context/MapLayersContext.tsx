@@ -15,7 +15,6 @@ import type { Airport } from "../components/AirportLayer/types/Airport";
 import type { Antenna } from "../components/AntennaLayer/types/Antenna";
 import {
   useLiveAircraftEngine,
-  useLiveAircraftSnapshot,
 } from "../components/AircraftLayer/context/LiveAircraftContext";
 import { useAirportsQuery, useAntennasQuery } from "../../../hooks/useAircraftQueries";
 
@@ -61,7 +60,6 @@ function buildDefaultVisibility(
 }
 
 export function MapLayersProvider({ children }: { children: ReactNode }) {
-  const liveAirplanes = useLiveAircraftSnapshot();
   const { getAircraftById } = useLiveAircraftEngine();
 
   const [airports, setAirports] = useState<Airport[]>(() => airportData as Airport[]);
@@ -176,14 +174,14 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
   const getEntityData = useCallback(
     (category: LayerCategory, id: string): MapEntity | null => {
       if (category === "airplanes") {
-        return getAircraftById(id) || liveAirplanes.find((a) => a.id === id) || null;
+        return getAircraftById(id) || null;
       }
       if (category === "airports") {
         return airports.find((a) => a.id === id) ?? null;
       }
       return antennas.find((a) => a.id === id) ?? null;
     },
-    [getAircraftById, liveAirplanes, airports, antennas]
+    [getAircraftById, airports, antennas]
   );
 
   const selectEntity = useCallback(
@@ -229,7 +227,7 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
       focusEntity,
       getEntityData,
       getSelectedEntityData,
-      airplanes: liveAirplanes,
+      airplanes: [] as Aircraft[],
       airports,
       antennas,
     }),
@@ -249,7 +247,6 @@ export function MapLayersProvider({ children }: { children: ReactNode }) {
       focusEntity,
       getEntityData,
       getSelectedEntityData,
-      liveAirplanes,
       airports,
       antennas,
     ]

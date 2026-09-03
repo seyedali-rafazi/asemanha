@@ -23,6 +23,7 @@ interface AircraftContextValue {
 const AircraftContext = createContext<AircraftContextValue | null>(null);
 
 export function AircraftProvider({ children }: { children: ReactNode }) {
+  console.log("[AircraftProvider] RENDER t=" + performance.now());
   const [tracks, setTracks] = useState<DrawnTrack[]>([]);
 
   const addTrack = useCallback((aircraftId: string) => {

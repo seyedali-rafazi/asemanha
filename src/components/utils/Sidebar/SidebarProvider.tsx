@@ -8,7 +8,8 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const COLLAPSED_WIDTH = 72;
@@ -56,7 +57,9 @@ export const SidebarProvider = ({ children, config }) => {
   const handleSidebarClick = useCallback((item) => {
     if (item.navigate) {
       closeSidebar();
-      navigate(item.navigate);
+      flushSync(() => {
+        navigate(item.navigate);
+      });
     } else if (item.component) {
       toggleSidebar(item.id);
     }

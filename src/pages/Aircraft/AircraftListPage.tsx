@@ -22,6 +22,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { useAircraftListQuery, useFleetStatsQuery } from "../../hooks/useAircraftQueries";
+import { useLiveAircraftEngine } from "../Home/components/AircraftLayer/context/LiveAircraftContext";
 import AircraftCard from "./components/AircraftCard";
 import AircraftFiltersBar from "./components/AircraftFiltersBar";
 import {
@@ -47,6 +48,9 @@ function AircraftListPage() {
   const isSm = useMediaQuery(theme.breakpoints.up("sm"));
   const columns = isLg ? 4 : isMd ? 3 : isSm ? 2 : 1;
 
+  const { getSnapshot } = useLiveAircraftEngine();
+  const cachedFleet = useMemo(() => getSnapshot(), [getSnapshot]);
+
   // React Query for live aircraft and fleet statistics
   const {
     data: aircraftResponse,
@@ -61,8 +65,11 @@ function AircraftListPage() {
   } = useFleetStatsQuery();
 
   const allAircraft = useMemo(() => {
-    return aircraftResponse?.aircraft || [];
-  }, [aircraftResponse]);
+    if (aircraftResponse?.aircraft && aircraftResponse.aircraft.length > 0) {
+      return aircraftResponse.aircraft;
+    }
+    return cachedFleet;
+  }, [aircraftResponse, cachedFleet]);
 
   const isCached = aircraftResponse?.cached ?? false;
   const lastSync = aircraftResponse?.time
@@ -70,7 +77,7 @@ function AircraftListPage() {
     : stats?.timestamp
     ? new Date(stats.timestamp * 1000)
     : null;
-  const loading = aircraftLoading || aircraftFetching;
+  const loading = (aircraftLoading || aircraftFetching) && allAircraft.length === 0;
 
   // Compute live real metrics directly from the backend aircraft telemetry
   const metrics = useMemo(() => {

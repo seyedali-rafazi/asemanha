@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { useRef } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useOutlet } from "react-router-dom";
 import HomePage from "../../pages/Home/Home";
 
 /**
@@ -10,24 +10,17 @@ import HomePage from "../../pages/Home/Home";
 export default function AppShell() {
   const location = useLocation();
   const isHome = location.pathname === "/";
-  const homeMountedRef = useRef(isHome);
-
-  if (isHome) {
-    homeMountedRef.current = true;
-  }
 
   return (
     <Box sx={{ position: "relative", height: "100%", width: "100%" }}>
-      {homeMountedRef.current && (
+      {isHome && (
         <Box
           sx={{
             position: "absolute",
             inset: 0,
-            visibility: isHome ? "visible" : "hidden",
-            pointerEvents: isHome ? "auto" : "none",
           }}
         >
-          <HomePage mapActive={isHome} />
+          <HomePage mapActive={true} />
         </Box>
       )}
 
@@ -39,8 +32,6 @@ export default function AppShell() {
           zIndex: isHome ? 0 : 1,
           bgcolor: isHome ? "transparent" : "background.default",
           overflow: isHome ? "hidden" : "auto",
-          // On home the Outlet renders nothing, so let clicks/drags fall
-          // through to the map underneath instead of being swallowed here.
           pointerEvents: isHome ? "none" : "auto",
         }}
       >
