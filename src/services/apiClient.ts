@@ -29,7 +29,7 @@ export async function apiClient<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { timeoutMs = 15000, params, headers = {}, ...customConfig } = options;
+  const { timeoutMs = 35000, params, headers = {}, ...customConfig } = options;
 
   let url: string;
   if (endpoint.startsWith("http")) {
