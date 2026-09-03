@@ -3,10 +3,10 @@
  */
 
 const DEFAULT_API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:8000/api/v1"
-    : "/api/v1");
+  (import.meta.env.VITE_API_BASE_URL &&
+   !import.meta.env.VITE_API_BASE_URL.includes("onrender.com"))
+    ? import.meta.env.VITE_API_BASE_URL
+    : "/api/v1";
 
 export interface RequestOptions extends RequestInit {
   timeoutMs?: number;
@@ -31,9 +31,16 @@ export async function apiClient<T>(
 ): Promise<T> {
   const { timeoutMs = 15000, params, headers = {}, ...customConfig } = options;
 
-  let url = endpoint.startsWith("http")
-    ? endpoint
-    : `${DEFAULT_API_BASE.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+  let url: string;
+  if (endpoint.startsWith("http")) {
+    url = endpoint;
+  } else if (endpoint.startsWith("/api/")) {
+    url = endpoint;
+  } else if (endpoint.startsWith("/health")) {
+    url = endpoint;
+  } else {
+    url = `${DEFAULT_API_BASE.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+  }
 
   if (params) {
     const searchParams = new URLSearchParams();

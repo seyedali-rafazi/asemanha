@@ -113,10 +113,5 @@ export async function fetchCacheStatus(): Promise<CacheStatusResponse> {
  * Check backend health status
  */
 export async function checkBackendHealth(): Promise<BackendHealthResponse> {
-  const rootUrl =
-    import.meta.env.VITE_API_BASE_URL?.replace(/\/api\/v1\/?$/, "") ||
-    (typeof window !== "undefined" && window.location.hostname === "localhost"
-      ? "http://localhost:8000"
-      : "");
-  return apiClient<BackendHealthResponse>(`${rootUrl}/health`);
+  return apiClient<BackendHealthResponse>("/health");
 }
