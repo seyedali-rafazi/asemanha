@@ -1,6 +1,6 @@
 // src/components/ExpandableToolbar/components/DrawRectangleControl/RectangleDrawLogic.jsx
 import { useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
 const RectangleDrawLogic = ({ isRectMode, setIsRectMode }) => {
   const { current: currentMap } = useMap();

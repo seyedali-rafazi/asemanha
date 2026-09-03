@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import { useLiveAircraftEngine } from "../AircraftLayer/context/LiveAircraftContext";
 import { useMapLayers } from "../../context/MapLayersContext";
 

@@ -18,7 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import { useAircraft } from "../AircraftLayer/context/AircraftContext";
 import { useLiveAircraftEngine } from "../AircraftLayer/context/LiveAircraftContext";
 import AircraftThumb from "../AircraftLayer/components/AircraftThumb";

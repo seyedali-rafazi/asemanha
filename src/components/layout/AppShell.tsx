@@ -5,7 +5,7 @@ import HomePage from "../../pages/Home/Home";
 
 /**
  * Keeps the map mounted but paused when on other routes.
- * Destroying Mapbox + DeckGL on every navigation blocks the main thread for seconds.
+ * Destroying MapLibre + DeckGL on every navigation blocks the main thread for seconds.
  */
 export default function AppShell() {
   const location = useLocation();

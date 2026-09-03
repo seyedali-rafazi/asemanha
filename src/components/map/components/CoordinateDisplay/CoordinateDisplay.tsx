@@ -1,7 +1,8 @@
 import { ContentCopy } from "@mui/icons-material";
 import { Box, IconButton, Paper } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import { useMap, Popup } from "react-map-gl/mapbox"; // Import Popup
+import { useMap, Popup } from "react-map-gl/maplibre";
+import type { MapMouseEvent } from "maplibre-gl";
 import LatCoordinate from "./components/LatCoordinate";
 import LonCoordinate from "./components/LonCoordinate";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ const CoordinateDisplay = () => {
   }, [map]);
 
 const handleMapClick = useCallback(
-  (e: mapboxgl.MapMouseEvent) => {
+  (e: MapMouseEvent) => {
     const { lng, lat } = e.lngLat;
     const text = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 

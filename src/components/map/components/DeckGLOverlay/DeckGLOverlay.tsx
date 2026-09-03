@@ -1,22 +1,22 @@
 import type { Layer } from "@deck.gl/core";
 import { MapboxOverlay } from "@deck.gl/mapbox";
-import type { Map as MapboxMap } from "mapbox-gl";
+import type { Map as MapLibreMap } from "maplibre-gl";
 import { useCallback, useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import { useAppSelector } from "../../../../store/hooks";
 
-function isMapAlive(map: MapboxMap | undefined | null): map is MapboxMap {
+function isMapAlive(map: MapLibreMap | undefined | null): map is MapLibreMap {
   return Boolean(map && !(map as { _removed?: boolean })._removed);
 }
 
-function isOverlayAttached(map: MapboxMap, overlay: MapboxOverlay) {
-  const controls = (map as MapboxMap & { _controls?: MapboxOverlay[] })._controls;
+function isOverlayAttached(map: MapLibreMap, overlay: MapboxOverlay) {
+  const controls = (map as MapLibreMap & { _controls?: MapboxOverlay[] })._controls;
   return Boolean(controls?.includes(overlay));
 }
 
-function attachOverlay(map: MapboxMap, layers: Layer[]) {
+function attachOverlay(map: MapLibreMap, layers: Layer[]) {
   const overlay = new MapboxOverlay({ interleaved: true });
-  map.addControl(overlay);
+  map.addControl(overlay as any);
   overlay.setProps({ layers });
   return overlay;
 }

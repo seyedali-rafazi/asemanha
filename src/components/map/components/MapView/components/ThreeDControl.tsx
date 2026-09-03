@@ -1,7 +1,7 @@
 import { Box, Tooltip, IconButton, useTheme } from "@mui/material";
 import ThreeDRotationIcon from "@mui/icons-material/ThreeDRotation";
 import { useState, useEffect } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
 const ThreeDControl = () => {
   const theme = useTheme();

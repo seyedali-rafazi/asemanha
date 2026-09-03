@@ -1,6 +1,6 @@
 import { Box, IconButton, Tooltip, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
 const CompassControl = () => {
   const { current: map } = useMap();

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
 /** Keeps the map flat (rectangular mercator) — no globe or 3D tilt. */
 export default function MapFlatViewEnforcer() {
@@ -11,9 +11,9 @@ export default function MapFlatViewEnforcer() {
 
     const enforceFlatView = () => {
       try {
-        map.setProjection("mercator");
+        (map as any).setProjection?.("mercator");
       } catch {
-        // Projection API may vary between mapbox-gl versions.
+        // Projection API may vary between map versions.
       }
 
       map.setPitch(0);

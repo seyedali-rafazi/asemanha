@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import { useLiveAircraftEngine } from "../../../../pages/Home/components/AircraftLayer/context/LiveAircraftContext";
 import type { BboxParams } from "../../../../services/types";
 
 /**
- * Synchronizes the Mapbox viewport (bounding box and zoom)
+ * Synchronizes the MapLibre viewport (bounding box and zoom)
  * with the live aircraft fetching engine and React Query.
  *
  * Trailing debounce ensures:

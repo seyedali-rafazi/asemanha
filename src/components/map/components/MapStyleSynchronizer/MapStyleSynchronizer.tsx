@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import { useAppSelector } from "../../../../store/hooks";
 import { getMapStyleUrl } from "../../../../store/mapStyles";
 
@@ -18,10 +18,7 @@ export default function MapStyleSynchronizer() {
 
     if (mapStyleId === activeStyleIdRef.current) return;
 
-    // Mark the target style as applied immediately. mapbox-gl skips the
-    // `style.load` event when it can diff two styles in place, so relying on
-    // that event to update this ref would leave it desynced and cause later
-    // style switches to be incorrectly short-circuited.
+    // Mark the target style as applied immediately.
     activeStyleIdRef.current = mapStyleId;
 
     const nextStyle = getMapStyleUrl(mapStyleId);
@@ -34,7 +31,7 @@ export default function MapStyleSynchronizer() {
 
     const handleStyleLoad = () => {
       try {
-        map.setProjection("mercator");
+        (map as any).setProjection?.("mercator");
       } catch {
         // Ignore if projection cannot be set on this style.
       }

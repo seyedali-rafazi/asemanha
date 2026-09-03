@@ -1,6 +1,6 @@
 import { Box, Paper, Slider, Typography, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Marker } from "react-map-gl/mapbox";
+import { Marker } from "react-map-gl/maplibre";
 
 const ImageOverlayLogic = ({
   images,

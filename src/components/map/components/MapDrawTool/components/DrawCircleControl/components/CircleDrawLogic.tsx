@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
 const createGeoJSONCircle = (center, radiusInKm, points = 64) => {
   const coords = [];

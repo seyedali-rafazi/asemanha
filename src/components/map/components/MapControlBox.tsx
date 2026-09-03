@@ -1,5 +1,6 @@
 // src/components/MapControlBox.jsx
-import { useControl } from "react-map-gl/mapbox";
+import { useControl } from "react-map-gl/maplibre";
+import type { ControlPosition } from "react-map-gl/maplibre";
 import { createPortal } from "react-dom";
 import { useRef, useState, useEffect } from "react";
 
@@ -13,7 +14,7 @@ class ControlBoxHandler {
   onAdd(map) {
     (this as any)._map = map;
     (this as any)._container = document.createElement("div");
-    (this as any)._container.className = "mapboxgl-ctrl";
+    (this as any)._container.className = "maplibregl-ctrl mapboxgl-ctrl";
 
     const { top, bottom, left, right } = (this as any)._margin;
     const pos = (this as any)._position;
@@ -51,9 +52,6 @@ class ControlBoxHandler {
     return (this as any)._container;
   }
 }
-
-// ✅ Import the type and define a strict prop type
-import type { ControlPosition } from "react-map-gl/mapbox";
 
 const MapControlBox = ({
   position = "top-right",

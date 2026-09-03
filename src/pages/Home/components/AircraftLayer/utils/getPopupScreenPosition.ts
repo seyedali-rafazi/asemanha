@@ -1,4 +1,4 @@
-import type { Map as MapboxMap } from "mapbox-gl";
+import type { Map as MapLibreMap } from "maplibre-gl";
 
 export const POPUP_WIDTH = 280;
 export const POPUP_HEIGHT = 340;
@@ -12,7 +12,7 @@ export interface PopupScreenPosition {
 }
 
 export function getPopupScreenPosition(
-  map: MapboxMap,
+  map: MapLibreMap,
   lon: number,
   lat: number,
   popupWidth = POPUP_WIDTH,

@@ -6,12 +6,12 @@ type MessageHandler = (data: AircraftListResponse) => void;
 type StatusHandler = (status: WebSocketStatus) => void;
 
 function getWebSocketUrl(bbox?: BboxParams): string {
-  let base = "ws://localhost:8000/api/v1/ws/live";
+  let base = "wss://asemanyar-backend.onrender.com/api/v1/ws/live";
   if (import.meta.env.VITE_WS_BASE_URL) {
     base = import.meta.env.VITE_WS_BASE_URL;
   } else if (typeof window !== "undefined") {
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-      base = "ws://localhost:8000/api/v1/ws/live";
+      base = "wss://asemanyar-backend.onrender.com/api/v1/ws/live";
     } else {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       base = `${protocol}//${window.location.host}/api/v1/ws/live`;

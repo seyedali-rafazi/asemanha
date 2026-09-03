@@ -1,6 +1,6 @@
 import { HomeFilled } from "@mui/icons-material";
 import { Box, IconButton, Tooltip, useTheme } from "@mui/material";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
 const FlyHome = () => {
   const { current: map } = useMap();

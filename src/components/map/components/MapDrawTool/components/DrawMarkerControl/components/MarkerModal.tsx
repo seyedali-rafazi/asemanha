@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useRef, useState, type FC } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import type { MarkerButtonProps } from "../types/MarkerType";
 import generateMarkerSvg from "../utils/generateMarkerSvg";
 

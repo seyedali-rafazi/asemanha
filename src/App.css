@@ -89,11 +89,17 @@ button {
   isolation: isolate;
 }
 
-/*------------------------------Mapbox------------------------------------------*/
+/*------------------------------MapLibre & Mapbox------------------------------------------*/
+.maplibregl-ctrl-logo,
 .mapboxgl-ctrl-logo {
   display: none !important;
 }
 
+.maplibregl-ctrl-attrib.maplibregl-compact-show {
+  display: none;
+}
+
+.aircraft-popup .maplibregl-popup-content,
 .aircraft-popup .mapboxgl-popup-content {
   padding: 0;
   background: transparent;
@@ -101,18 +107,21 @@ button {
   border-radius: 0;
 }
 
+.aircraft-popup .maplibregl-popup-tip,
 .aircraft-popup .mapboxgl-popup-tip {
   border-top-color: #1d1f20;
 }
 
+.aircraft-popup.anchor-top .maplibregl-popup-tip,
 .aircraft-popup.anchor-top .mapboxgl-popup-tip,
+.aircraft-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip,
 .aircraft-popup.mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
   border-bottom-color: #1d1f20;
   border-top-color: transparent;
 }
 
+.aircraft-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
 .aircraft-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
   border-top-color: #1d1f20;
   border-bottom-color: transparent;
 }
-

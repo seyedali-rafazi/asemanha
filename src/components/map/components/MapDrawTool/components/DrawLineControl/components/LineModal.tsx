@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useRef, useState, type FC } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import CheckIcon from "@mui/icons-material/Check"; // Assuming you have mui icons
 import { createPortal } from "react-dom";
 import useIsTouchDevice from "../../../../../../../hooks/useIsTouchDevice";

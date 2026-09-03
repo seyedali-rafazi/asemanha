@@ -1,12 +1,12 @@
-import type { Map as MapboxMap } from "mapbox-gl";
+import type { Map as MapLibreMap } from "maplibre-gl";
 import { useCallback, useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
-function isMapAlive(map: MapboxMap | undefined | null): map is MapboxMap {
+function isMapAlive(map: MapLibreMap | undefined | null): map is MapLibreMap {
   return Boolean(map && !(map as { _removed?: boolean })._removed);
 }
 
-function setMapCursor(map: MapboxMap, cursor: string) {
+function setMapCursor(map: MapLibreMap, cursor: string) {
   if (!isMapAlive(map)) return;
   const canvas = map.getCanvas();
   if (!canvas?.style) return;

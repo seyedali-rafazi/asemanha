@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import MapboxMap from "../../components/map/AsemanhaMap";
+import AsemanhaMap from "../../components/map/AsemanhaMap";
 import MapActivityController from "../../components/map/components/MapActivityController/MapActivityController";
 import MapEntitiesLayer from "./components/MapEntitiesLayer/MapEntitiesLayer";
 import MapFocusController from "./components/MapFocusController/MapFocusController";
@@ -26,7 +26,7 @@ const HomePage = ({ mapActive = true }: HomePageProps) => {
 
   return (
     <Box sx={{ width: "100%", height: "100%", position: "relative" }}>
-      <MapboxMap>
+      <AsemanhaMap>
         <MapActivityController active={mapActive} />
         <MapFocusController />
         <MapEntitiesLayer />
@@ -41,7 +41,7 @@ const HomePage = ({ mapActive = true }: HomePageProps) => {
         >
           <MapItemPopup />
         </Box>
-      </MapboxMap>
+      </AsemanhaMap>
     </Box>
   );
 };

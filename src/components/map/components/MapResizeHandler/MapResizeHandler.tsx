@@ -1,8 +1,8 @@
-import type { Map as MapboxMap } from "mapbox-gl";
+import type { Map as MapLibreMap } from "maplibre-gl";
 import { useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
-function resizeMap(map: MapboxMap) {
+function resizeMap(map: MapLibreMap) {
   if ((map as { _removed?: boolean })._removed) return;
 
   const container = map.getContainer();

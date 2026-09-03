@@ -1,7 +1,7 @@
 import { AirplanemodeActive } from "@mui/icons-material";
 import { Paper, Tooltip, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import { useLiveAircraftEngine } from "../AircraftLayer/context/LiveAircraftContext";
 import { useMapLayers } from "../../context/MapLayersContext";
 

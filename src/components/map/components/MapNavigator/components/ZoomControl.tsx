@@ -1,5 +1,5 @@
 // src/components/ZoomControl.jsx
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import {
   Box,
   IconButton,

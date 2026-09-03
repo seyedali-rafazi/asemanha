@@ -4,12 +4,12 @@
 
 **An interactive flight-tracking and aviation map platform**
 
-Real-time-style aircraft visualization, rich drawing tools, and layered map data — built with React, Mapbox GL, and deck.gl.
+Real-time-style aircraft visualization, rich drawing tools, and layered map data — built with React, MapLibre GL, and deck.gl.
 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
-![Mapbox GL](https://img.shields.io/badge/Mapbox%20GL-3-000000?logo=mapbox&logoColor=white)
+![MapLibre GL](https://img.shields.io/badge/MapLibre%20GL-5-29323c?logo=maplibre&logoColor=white)
 ![deck.gl](https://img.shields.io/badge/deck.gl-9-29323c)
 ![MUI](https://img.shields.io/badge/MUI-7-007fff?logo=mui&logoColor=white)
 
@@ -30,7 +30,7 @@ Real-time-style aircraft visualization, rich drawing tools, and layered map data
 
 ### Map
 
-- **4 base map styles** — Balad (default, token-free), Mapbox Streets, Dark, and Satellite — switchable live with camera preserved
+- **4 base map styles** — Balad (default, token-free), Streets, Dark, and Satellite — switchable live with camera preserved
 - **deck.gl overlay** rendering 50 aircraft (heading-rotated icons), 15 airports, and 12 antennas (Radar, ADS-B, VOR/DME, …)
 - **Layers panel** — toggle whole categories or individual items, search, and focus entities on the map
 - **Item popups** with full details for any aircraft, airport, or antenna
@@ -128,7 +128,7 @@ Open the URL Vite prints (typically `http://localhost:5173`).
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `VITE_MAPBOX_TOKEN` | No | Mapbox access token. Get one at [account.mapbox.com](https://account.mapbox.com/access-tokens/). Without it, only the **Balad** style (served from raah.ir) is available. |
+| `VITE_MAPLIBRE_TOKEN` | No | Optional API token if using private vector tile services. Standard styles (Balad, Streets, Dark, Satellite) are fully open and work out of the box without any tokens. |
 
 ### Data files
 

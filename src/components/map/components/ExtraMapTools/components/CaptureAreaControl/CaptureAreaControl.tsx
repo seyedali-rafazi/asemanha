@@ -12,7 +12,7 @@ import {
   Button,
 } from "@mui/material";
 import CropIcon from "@mui/icons-material/Crop";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import { useExclusiveTool } from "../../../../context/MapToolContext";
 
 const CaptureAreaControl = () => {

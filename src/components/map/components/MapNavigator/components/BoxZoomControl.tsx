@@ -1,7 +1,7 @@
 import { Box, Tooltip, IconButton, useTheme } from "@mui/material";
 import HighlightAltIcon from "@mui/icons-material/HighlightAlt";
 import { useState, useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
 const BoxZoomControl = () => {
   const theme = useTheme();

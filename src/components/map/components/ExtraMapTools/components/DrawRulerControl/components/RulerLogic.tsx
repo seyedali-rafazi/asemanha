@@ -1,6 +1,6 @@
 // src/components/ExpandableToolbar/components/DrawRulerControl/components/RulerLogic.jsx
 import { useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
 // Haversine formula to calculate distance in km
 const calculateDistance = (pt1, pt2) => {

@@ -15,17 +15,17 @@ export const MAP_STYLE_OPTIONS: MapStyleOption[] = [
   {
     id: "streets",
     label: "Streets",
-    url: "mapbox://styles/mapbox/streets-v12",
+    url: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
   },
   {
     id: "dark",
     label: "Dark",
-    url: "mapbox://styles/mapbox/dark-v11",
+    url: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
   },
   {
     id: "satellite",
     label: "Satellite",
-    url: "mapbox://styles/mapbox/satellite-streets-v12",
+    url: "/styles/satellite.json",
   },
 ];
 

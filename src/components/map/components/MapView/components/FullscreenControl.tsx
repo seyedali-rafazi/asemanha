@@ -2,7 +2,7 @@ import { Box, Tooltip, IconButton, useTheme } from "@mui/material";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 import { useState, useEffect } from "react";
-import { useMap } from "react-map-gl/mapbox"; // Import useMap
+import { useMap } from "react-map-gl/maplibre";
 
 const FullscreenControl = () => {
   const theme = useTheme();

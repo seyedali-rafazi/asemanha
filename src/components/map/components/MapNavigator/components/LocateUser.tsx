@@ -6,7 +6,7 @@ import {
   CircularProgress,
   useTheme,
 } from "@mui/material";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 import { useState } from "react";
 import { toast } from "sonner";
 

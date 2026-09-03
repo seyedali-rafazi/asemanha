@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
 
 export default function MapActivityController({ active }: { active: boolean }) {
   const { current: mapRef } = useMap();

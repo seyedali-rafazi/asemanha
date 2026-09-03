@@ -1,6 +1,7 @@
-// src/MapboxMap.jsx
-import "mapbox-gl/dist/mapbox-gl.css";
-import { Map, Source, Layer } from "react-map-gl/mapbox"; // ✅ Import Source and Layer
+// src/components/map/AsemanhaMap.tsx
+import "maplibre-gl/dist/maplibre-gl.css";
+import maplibregl from "maplibre-gl";
+import { Map, Source, Layer } from "react-map-gl/maplibre";
 import CoordinateDisplay from "./components/CoordinateDisplay/CoordinateDisplay";
 import MapControlBox from "./components/MapControlBox";
 import MapNavigator from "./components/MapNavigator/MapNavigator";
@@ -19,18 +20,15 @@ import { MapToolProvider } from "./context/MapToolContext";
 import { AccordionGroupProvider } from "../utils/MapTools/AccordionGroupContext";
 import MapAircraftBadge from "../../pages/Home/components/MapAircraftBadge/MapAircraftBadge";
 
-const MAPBOX_TOKEN =
-  import.meta.env.VITE_MAPBOX_TOKEN ||
-  import.meta.env.REACT_APP_MAPBOX_TOKEN;
-
 const ZOOM_BOX_POSITION = "top-left";
 const COORDINATE_POSITION = "bottom-left";
 const TOOLBAR_POSITION = "top-right";
 const MAP_VIEW = "bottom-right";
 
-interface MapboxMapProps {
+export interface AsemanhaMapProps {
   children?: ReactNode;
 }
+export type MapboxMapProps = AsemanhaMapProps;
 
 // ✅ Create a polygon that covers the entire world
 const worldPolygon = {
@@ -54,7 +52,7 @@ const worldPolygon = {
   ],
 };
 
-const MapboxMap: FC<MapboxMapProps> = ({ children }) => {
+const AsemanhaMap: FC<AsemanhaMapProps> = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const mapStyleId = useAppSelector((state) => state.settings.mapStyleId);
@@ -81,10 +79,9 @@ const MapboxMap: FC<MapboxMapProps> = ({ children }) => {
       }}
     >
       <Map
+        mapLib={maplibregl}
         initialViewState={initialViewState}
-        mapboxAccessToken={MAPBOX_TOKEN}
         mapStyle={bootMapStyleRef.current}
-        projection="mercator"
         dragRotate={false}
         pitchWithRotate={false}
         touchPitch={false}
@@ -146,4 +143,5 @@ const MapboxMap: FC<MapboxMapProps> = ({ children }) => {
   );
 };
 
-export default MapboxMap;
+export const MapboxMap = AsemanhaMap;
+export default AsemanhaMap;

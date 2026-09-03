@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useMap } from "react-map-gl/mapbox";
+import { useMap } from "react-map-gl/maplibre";
+import type { GeoJSONSource } from "maplibre-gl";
 
 interface FreeDrawLogicProps {
   isDrawingMode: boolean;
@@ -66,7 +67,7 @@ const FreeDrawLogic = ({
       ensureFreedrawLayers();
 
       const source = map.getSource("custom-freedraw-source") as
-        | mapboxgl.GeoJSONSource
+        | GeoJSONSource
         | undefined;
       if (!source) return;
 
