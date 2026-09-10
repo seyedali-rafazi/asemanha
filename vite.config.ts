@@ -13,12 +13,14 @@ export default defineConfig(({ mode }) => {
     envPrefix: ["VITE_", "REACT_APP_"],
     server: {
       port: 5173,
+      host: true,
       proxy: {
         '/api': {
           target: backendTarget,
           changeOrigin: true,
           secure: false,
-          ws: true,
+          rewrite: (path) =>
+            path.startsWith('/api/v1') ? path : path.replace(/^\/api/, '/api/v1'),
         },
         '/health': {
           target: backendTarget,

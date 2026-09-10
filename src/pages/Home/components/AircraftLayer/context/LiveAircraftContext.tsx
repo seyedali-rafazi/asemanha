@@ -18,10 +18,7 @@ import {
 } from "../utils/aircraftMovement";
 import { useLocation } from "react-router-dom";
 import { useAircraftListQuery } from "../../../../../hooks/useAircraftQueries";
-import {
-  liveWebSocket,
-  type WebSocketStatus,
-} from "../../../../../services/websocketService";
+import type { WebSocketStatus } from "../../../../../services/websocketService";
 import type { BboxParams } from "../../../../../services/types";
 
 type TrackPoint = [number, number, number];
@@ -204,7 +201,6 @@ export function LiveAircraftProvider({
     const nextViewport = { ...bbox, zoom };
     setCurrentViewport(nextViewport);
     currentViewportRef.current = nextViewport;
-    liveWebSocket.setBbox(nextViewport);
   }, []);
 
   const refreshFleet = useCallback(async () => {
@@ -214,30 +210,6 @@ export function LiveAircraftProvider({
       console.warn("[LiveAircraft] Failed to refresh fleet with React Query:", err);
     }
   }, [aircraftQuery]);
-
-  // WebSocket lifecycle - connects once and remains open
-  useEffect(() => {
-    if (!isEffectiveActive) return;
-
-    // Subscribe to WebSocket status & messages
-    const unsubscribeStatus = liveWebSocket.onStatusChange((status) => {
-      setWsStatus(status);
-    });
-
-    const unsubscribeMessages = liveWebSocket.onMessage((data) => {
-      if (data && data.aircraft) {
-        handleIncomingAircraft(data.aircraft, data.cached, data.time);
-      }
-    });
-
-    liveWebSocket.connect(currentViewport ?? undefined);
-
-    return () => {
-      unsubscribeStatus();
-      unsubscribeMessages();
-      liveWebSocket.disconnect();
-    };
-  }, [isEffectiveActive, handleIncomingAircraft]);
 
   // Smooth interpolation / simulation loop
   useEffect(() => {
