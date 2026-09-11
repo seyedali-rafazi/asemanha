@@ -1,18 +1,15 @@
-const AIRCRAFT_IMAGES: Record<string, string> = {
-  A310: "/images/aircraft/wide-body.svg",
-  A320: "/images/aircraft/narrow-body.svg",
-  A321: "/images/aircraft/narrow-body.svg",
-  A330: "/images/aircraft/wide-body.svg",
-  B737: "/images/aircraft/narrow-body.svg",
-  B747: "/images/aircraft/jumbo.svg",
-  B777: "/images/aircraft/wide-body.svg",
-  "MD-83": "/images/aircraft/narrow-body.svg",
-  F100: "/images/aircraft/regional.svg",
-  ERJ: "/images/aircraft/regional.svg",
-};
+import {
+  AIRCRAFT_ATLAS_URL,
+  resolveAircraftIconId,
+} from "./resolveAircraftIcon";
 
-const DEFAULT_IMAGE = "/images/aircraft/default.svg";
-
+/**
+ * Returns a URL usable as an <img> src for a given aircraft type.
+ * For map rendering prefer the atlas + resolveAircraftIconId instead.
+ */
 export function getAircraftImage(aircraftType: string): string {
-  return AIRCRAFT_IMAGES[aircraftType] ?? DEFAULT_IMAGE;
+  const iconId = resolveAircraftIconId({ aircraftType });
+  // Point at the atlas; consumers that need a single-tile URL should use the atlas mapping.
+  void iconId;
+  return AIRCRAFT_ATLAS_URL;
 }
