@@ -20,6 +20,12 @@ import { useLocation } from "react-router-dom";
 import { useAircraftListQuery } from "../../../../../hooks/useAircraftQueries";
 import type { WebSocketStatus } from "../../../../../services/websocketService";
 import type { BboxParams } from "../../../../../services/types";
+import {
+  DEFAULT_MIDDLE_EAST_BBOX,
+  DEFAULT_MIDDLE_EAST_MOBILE_BBOX,
+} from "../../../../../components/map/utils/mapDefaults";
+
+export { DEFAULT_MIDDLE_EAST_BBOX, DEFAULT_MIDDLE_EAST_MOBILE_BBOX };
 
 type TrackPoint = [number, number, number];
 type Listener = () => void;
@@ -66,7 +72,12 @@ export function LiveAircraftProvider({
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [currentViewport, setCurrentViewport] = useState<
     (BboxParams & { zoom?: number }) | null
-  >(null);
+  >(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 600) {
+      return DEFAULT_MIDDLE_EAST_MOBILE_BBOX;
+    }
+    return DEFAULT_MIDDLE_EAST_BBOX;
+  });
 
   const activeRef = useRef(isEffectiveActive);
   activeRef.current = isEffectiveActive;

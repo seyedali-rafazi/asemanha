@@ -10,7 +10,7 @@ import MapDrawTools from "./components/MapDrawTool/MapDrawTools";
 import ExtraMapTools from "./components/ExtraMapTools/ExtraMapTools";
 import MapView from "./components/MapView/MapView";
 import MapResizeHandler from "./components/MapResizeHandler/MapResizeHandler";
-import { useRef, type FC, type ReactNode } from "react";
+import { useMemo, useRef, type FC, type ReactNode } from "react";
 import { useAppSelector } from "../../store/hooks";
 import { getMapStyleUrl } from "../../store/mapStyles";
 import MapFlatViewEnforcer from "./components/MapFlatViewEnforcer/MapFlatViewEnforcer";
@@ -19,6 +19,13 @@ import MapViewportSync from "./components/MapViewportSync/MapViewportSync";
 import { MapToolProvider } from "./context/MapToolContext";
 import { AccordionGroupProvider } from "../utils/MapTools/AccordionGroupContext";
 import MapAircraftBadge from "../../pages/Home/components/MapAircraftBadge/MapAircraftBadge";
+
+import {
+  MIDDLE_EAST_DESKTOP_VIEW,
+  MIDDLE_EAST_MOBILE_VIEW,
+} from "./utils/mapDefaults";
+
+export { MIDDLE_EAST_DESKTOP_VIEW, MIDDLE_EAST_MOBILE_VIEW };
 
 const ZOOM_BOX_POSITION = "top-left";
 const COORDINATE_POSITION = "bottom-left";
@@ -61,13 +68,11 @@ const AsemanhaMap: FC<AsemanhaMapProps> = ({ children }) => {
     bootMapStyleRef.current = getMapStyleUrl(mapStyleId);
   }
 
-  const initialViewState = {
-    longitude: 34,
-    latitude: 37.7853,
-    zoom: 2,
-    pitch: 0,
-    bearing: 0,
-  };
+  const initialViewState = useMemo(() => {
+    const isSmallScreen =
+      typeof window !== "undefined" ? window.innerWidth < 600 : isMobile;
+    return isSmallScreen ? MIDDLE_EAST_MOBILE_VIEW : MIDDLE_EAST_DESKTOP_VIEW;
+  }, [isMobile]);
 
   return (
     <div

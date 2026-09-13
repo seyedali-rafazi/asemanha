@@ -93,10 +93,9 @@ export default function MapViewportSync() {
       scheduleEmit(150);
     };
 
-    // Initial emit on load
-    if (map.isStyleLoaded()) {
-      emitViewport();
-    } else {
+    // Initial emit immediately if bounds are already computable, and on load
+    emitViewport();
+    if (!map.isStyleLoaded()) {
       map.once("load", emitViewport);
     }
 

@@ -1,19 +1,30 @@
 import { HomeFilled } from "@mui/icons-material";
-import { Box, IconButton, Tooltip, useTheme } from "@mui/material";
+import { Box, IconButton, Tooltip, useTheme, useMediaQuery } from "@mui/material";
 import { useMap } from "react-map-gl/maplibre";
+import {
+  MIDDLE_EAST_DESKTOP_VIEW,
+  MIDDLE_EAST_MOBILE_VIEW,
+} from "../../../utils/mapDefaults";
 
 const FlyHome = () => {
   const { current: map } = useMap();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleFlyhome = () => {
-    if (map) map.flyTo({ center: [53, 35], zoom: 5, speed: 1, curve: 1 });
+    if (!map) return;
+    const view = isMobile ? MIDDLE_EAST_MOBILE_VIEW : MIDDLE_EAST_DESKTOP_VIEW;
+    map.flyTo({
+      center: [view.longitude, view.latitude],
+      zoom: view.zoom,
+      speed: 1,
+      curve: 1,
+    });
   };
 
   return (
     <Box>
-      {/* Zoom Out Button */}
-      <Tooltip title="Zoom Out" placement="left" arrow>
+      <Tooltip title="Middle East (Home)" placement="left" arrow>
         <IconButton
           onClick={handleFlyhome}
           size="medium"
