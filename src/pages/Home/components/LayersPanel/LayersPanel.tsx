@@ -30,7 +30,7 @@ import {
   useMapLayers,
   type LayerCategory,
 } from "../../context/MapLayersContext";
-import { useLiveAircraftSnapshot } from "../AircraftLayer/context/LiveAircraftContext";
+import { useLiveAircraftFleetSnapshot } from "../AircraftLayer/context/LiveAircraftContext";
 
 const CATEGORY_CONFIG: Record<
   LayerCategory,
@@ -87,7 +87,8 @@ export default function LayersPanel() {
     getEntityData,
   } = useMapLayers();
 
-  const liveAirplanes = useLiveAircraftSnapshot();
+  // Fleet membership only (~every REST refresh), not 20 Hz animation ticks.
+  const liveAirplanes = useLiveAircraftFleetSnapshot();
   const parentRef = useRef<HTMLDivElement>(null);
 
   const items = useMemo(() => {

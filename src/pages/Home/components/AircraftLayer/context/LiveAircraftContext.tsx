@@ -11,7 +11,7 @@ import {
 } from "react";
 import type { Aircraft } from "../types/Aircraft";
 import {
-  advanceAircraftSim,
+  advanceAircraftSimInPlace,
   buildTrackPath,
   initAircraftSim,
   type AircraftSimState,
@@ -33,8 +33,14 @@ type Listener = () => void;
 interface LiveAircraftContextValue {
   getAircraftById: (id: string) => Aircraft | null;
   getTrackPath: (id: string) => TrackPoint[];
+  /** High-rate: position/heading animation (~20 Hz). Map should use this. */
+  subscribeMotion: (listener: Listener) => () => void;
+  /** Low-rate: fleet membership / telemetry refresh. Lists/panels should use this. */
+  subscribeFleet: (listener: Listener) => () => void;
+  /** @deprecated Prefer subscribeMotion or subscribeFleet */
   subscribe: (listener: Listener) => () => void;
   getSnapshot: () => Aircraft[];
+  getMotionVersion: () => number;
   wsStatus: WebSocketStatus;
   isCached: boolean;
   lastUpdated: number | null;
@@ -52,6 +58,22 @@ interface LiveAircraftProviderProps {
 
 const LiveAircraftContext = createContext<LiveAircraftContextValue | null>(null);
 
+/** Degrees of padding around the viewport for simulation (skip far off-screen planes). */
+const SIM_VIEW_BUFFER_DEG = 0.75;
+
+function isInSimViewport(
+  lat: number,
+  lon: number,
+  vp: BboxParams | null
+): boolean {
+  if (!vp) return true;
+  const minLat = (vp.lamin ?? -90) - SIM_VIEW_BUFFER_DEG;
+  const maxLat = (vp.lamax ?? 90) + SIM_VIEW_BUFFER_DEG;
+  const minLon = (vp.lomin ?? -180) - SIM_VIEW_BUFFER_DEG;
+  const maxLon = (vp.lomax ?? 180) + SIM_VIEW_BUFFER_DEG;
+  return lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon;
+}
+
 export function LiveAircraftProvider({
   children,
   active = true,
@@ -60,14 +82,16 @@ export function LiveAircraftProvider({
   const isHome = location.pathname === "/";
   const isEffectiveActive = Boolean(active && isHome);
 
-  const listenersRef = useRef<Set<Listener>>(new Set());
+  const motionListenersRef = useRef<Set<Listener>>(new Set());
+  const fleetListenersRef = useRef<Set<Listener>>(new Set());
   const simStatesRef = useRef<Map<string, AircraftSimState>>(new Map());
   const routesRef = useRef<Map<string, [number, number][]>>(new Map());
   const fleetMapRef = useRef<Map<string, Aircraft>>(new Map());
   const lastSeenRef = useRef<Map<string, number>>(new Map());
   const aircraftRef = useRef<Aircraft[]>([]);
+  const motionVersionRef = useRef(0);
 
-  const [wsStatus, setWsStatus] = useState<WebSocketStatus>("disconnected");
+  const [wsStatus] = useState<WebSocketStatus>("disconnected");
   const [isCached, setIsCached] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [currentViewport, setCurrentViewport] = useState<
@@ -85,15 +109,35 @@ export function LiveAircraftProvider({
   const currentViewportRef = useRef(currentViewport);
   currentViewportRef.current = currentViewport;
 
+  const subscribeMotion = useCallback((listener: Listener) => {
+    motionListenersRef.current.add(listener);
+    return () => motionListenersRef.current.delete(listener);
+  }, []);
+
+  const subscribeFleet = useCallback((listener: Listener) => {
+    fleetListenersRef.current.add(listener);
+    return () => fleetListenersRef.current.delete(listener);
+  }, []);
+
+  /** Legacy: both channels (prefer explicit hooks). */
   const subscribe = useCallback((listener: Listener) => {
-    listenersRef.current.add(listener);
-    return () => listenersRef.current.delete(listener);
+    motionListenersRef.current.add(listener);
+    fleetListenersRef.current.add(listener);
+    return () => {
+      motionListenersRef.current.delete(listener);
+      fleetListenersRef.current.delete(listener);
+    };
   }, []);
 
   const getSnapshot = useCallback(() => aircraftRef.current, []);
+  const getMotionVersion = useCallback(() => motionVersionRef.current, []);
 
-  const notify = useCallback(() => {
-    listenersRef.current.forEach((listener) => listener());
+  const notifyMotion = useCallback(() => {
+    motionListenersRef.current.forEach((listener) => listener());
+  }, []);
+
+  const notifyFleet = useCallback(() => {
+    fleetListenersRef.current.forEach((listener) => listener());
   }, []);
 
   /**
@@ -125,27 +169,20 @@ export function LiveAircraftProvider({
           sim = initAircraftSim(item);
           simMap.set(item.id, sim);
         } else {
-          // Align sim state toward latest real telemetry
           const latDiff = Math.abs(sim.lat - item.lat);
           const lonDiff = Math.abs(sim.lon - item.lon);
           if (latDiff > 0.03 || lonDiff > 0.03) {
-            sim = {
-              ...sim,
-              lat: item.lat,
-              lon: item.lon,
-              heading_deg: item.heading_deg,
-            };
-            simMap.set(item.id, sim);
+            sim.lat = item.lat;
+            sim.lon = item.lon;
+            sim.heading_deg = item.heading_deg;
           }
         }
       }
 
-      // If we have a specific viewport bounding box with incoming results:
-      // Prune aircraft that are not in the new batch and outside/stale
       for (const [id, seenTime] of lastSeenMap.entries()) {
         const item = fleetMap.get(id);
-        const isStale = nowSec - seenTime > 120; // 2 minutes stale
-        
+        const isStale = nowSec - seenTime > 120;
+
         let isOutOfView = false;
         if (vp && item) {
           const latBuffer = 1.0;
@@ -172,7 +209,7 @@ export function LiveAircraftProvider({
         }
       }
 
-      // Reconstruct live aircraft snapshot
+      // Mutable live copies — animation loop updates lat/lon/heading in place.
       aircraftRef.current = Array.from(fleetMap.values()).map((item) => {
         const sim = simMap.get(item.id);
         return {
@@ -183,21 +220,20 @@ export function LiveAircraftProvider({
         };
       });
 
+      motionVersionRef.current += 1;
       setIsCached(cached);
       setLastUpdated(nowSec);
-      notify();
+      notifyMotion();
+      notifyFleet();
     },
-    [notify]
+    [notifyMotion, notifyFleet]
   );
 
-  // React Query fetch whenever viewport (bbox or zoom) changes on motion/resize stop,
-  // and refetch every 10 seconds for live positions
   const aircraftQuery = useAircraftListQuery(currentViewport ?? undefined, {
     enabled: isEffectiveActive,
     refetchInterval: 10000,
   });
 
-  // Sync React Query updates into live fleet
   useEffect(() => {
     if (aircraftQuery.data) {
       handleIncomingAircraft(
@@ -222,7 +258,7 @@ export function LiveAircraftProvider({
     }
   }, [aircraftQuery]);
 
-  // Smooth interpolation / simulation loop
+  // Smooth interpolation — sim + publish at 20 Hz (not every rAF)
   useEffect(() => {
     if (!isEffectiveActive) return;
 
@@ -238,33 +274,40 @@ export function LiveAircraftProvider({
       lastTime = now;
       renderAccumulator += delta;
 
-      const currentAircraftList = aircraftRef.current;
-      for (const item of currentAircraftList) {
-        const route = routesRef.current.get(item.id) ?? item.path;
-        const currentSim =
-          simStatesRef.current.get(item.id) ?? initAircraftSim(item);
-        const nextSim = advanceAircraftSim(
-          currentSim,
-          route,
-          item.speed_kts,
-          delta
-        );
-        simStatesRef.current.set(item.id, nextSim);
-      }
-
       if (renderAccumulator >= renderInterval) {
+        const simDelta = renderAccumulator;
         renderAccumulator = 0;
-        aircraftRef.current = aircraftRef.current.map((item) => {
-          const sim = simStatesRef.current.get(item.id);
-          if (!sim) return item;
-          return {
-            ...item,
-            lat: sim.lat,
-            lon: sim.lon,
-            heading_deg: sim.heading_deg,
-          };
-        });
-        notify();
+
+        const list = aircraftRef.current;
+        const vp = currentViewportRef.current;
+        const simMap = simStatesRef.current;
+        const routeMap = routesRef.current;
+        let moved = false;
+
+        for (let i = 0; i < list.length; i++) {
+          const item = list[i];
+          // Skip CPU work for planes well outside the current camera.
+          if (!isInSimViewport(item.lat, item.lon, vp)) continue;
+
+          const route = routeMap.get(item.id) ?? item.path;
+          let sim = simMap.get(item.id);
+          if (!sim) {
+            sim = initAircraftSim(item);
+            simMap.set(item.id, sim);
+          }
+
+          advanceAircraftSimInPlace(sim, route, item.speed_kts, simDelta);
+          item.lat = sim.lat;
+          item.lon = sim.lon;
+          item.heading_deg = sim.heading_deg;
+          moved = true;
+        }
+
+        if (moved) {
+          motionVersionRef.current += 1;
+          // Same array + mutated objects; consumers re-render via motionVersion.
+          notifyMotion();
+        }
       }
 
       frameId = requestAnimationFrame(tick);
@@ -272,7 +315,7 @@ export function LiveAircraftProvider({
 
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
-  }, [isEffectiveActive, notify]);
+  }, [isEffectiveActive, notifyMotion]);
 
   const getAircraftById = useCallback(
     (id: string) =>
@@ -298,8 +341,11 @@ export function LiveAircraftProvider({
     () => ({
       getAircraftById,
       getTrackPath,
+      subscribeMotion,
+      subscribeFleet,
       subscribe,
       getSnapshot,
+      getMotionVersion,
       wsStatus,
       isCached,
       lastUpdated,
@@ -312,8 +358,11 @@ export function LiveAircraftProvider({
     [
       getAircraftById,
       getTrackPath,
+      subscribeMotion,
+      subscribeFleet,
       subscribe,
       getSnapshot,
+      getMotionVersion,
       wsStatus,
       isCached,
       lastUpdated,
@@ -332,6 +381,7 @@ export function LiveAircraftProvider({
   );
 }
 
+/** High-rate positions for the map (animation). Prefer motionVersion + getSnapshot. */
 export function useLiveAircraftSnapshot(): Aircraft[] {
   const context = useContext(LiveAircraftContext);
   if (!context) {
@@ -339,10 +389,41 @@ export function useLiveAircraftSnapshot(): Aircraft[] {
       "useLiveAircraftSnapshot must be used within LiveAircraftProvider"
     );
   }
+  // Re-render when motionVersion changes; snapshot array ref is stable between fleet updates.
+  useSyncExternalStore(
+    context.subscribeMotion,
+    context.getMotionVersion,
+    context.getMotionVersion
+  );
+  return context.getSnapshot();
+}
+
+/** Low-rate fleet membership for lists/panels (not every animation tick). */
+export function useLiveAircraftFleetSnapshot(): Aircraft[] {
+  const context = useContext(LiveAircraftContext);
+  if (!context) {
+    throw new Error(
+      "useLiveAircraftFleetSnapshot must be used within LiveAircraftProvider"
+    );
+  }
   return useSyncExternalStore(
-    context.subscribe,
+    context.subscribeFleet,
     context.getSnapshot,
     context.getSnapshot
+  );
+}
+
+export function useLiveAircraftMotionVersion(): number {
+  const context = useContext(LiveAircraftContext);
+  if (!context) {
+    throw new Error(
+      "useLiveAircraftMotionVersion must be used within LiveAircraftProvider"
+    );
+  }
+  return useSyncExternalStore(
+    context.subscribeMotion,
+    context.getMotionVersion,
+    context.getMotionVersion
   );
 }
 

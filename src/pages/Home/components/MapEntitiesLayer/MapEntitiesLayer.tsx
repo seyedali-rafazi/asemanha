@@ -8,10 +8,8 @@ import {
 import { createAircraftIconLayer } from "../AircraftLayer/layers/createAircraftLayer";
 import { createFlightPathLayer } from "../AircraftLayer/layers/createFlightPathLayer";
 import type { Aircraft } from "../AircraftLayer/types/Aircraft";
-import airportData from "../AirportLayer/data/iran_airports.json";
 import { createAirportLayer } from "../AirportLayer/layers/createAirportLayer";
 import type { Airport } from "../AirportLayer/types/Airport";
-import antennaData from "../AntennaLayer/data/iran_antennas.json";
 import { createAntennaLayer } from "../AntennaLayer/layers/createAntennaLayer";
 import type { Antenna } from "../AntennaLayer/types/Antenna";
 import { useMapLayers } from "../../context/MapLayersContext";
@@ -30,7 +28,8 @@ const MapEntitiesLayer = ({ active = true }: MapEntitiesLayerProps) => {
   const { isItemVisible, selectEntity, airports, antennas } = useMapLayers();
   const { tracks } = useAircraft();
   const liveAircraft = useLiveAircraftSnapshot();
-  const { getTrackPath } = useLiveAircraftEngine();
+  const { getTrackPath, getMotionVersion } = useLiveAircraftEngine();
+  const motionVersion = getMotionVersion();
   const handleHover = useStableMapCursor("map-entities");
   const { airplaneSize, showAirplaneAltitude, mapStyleId } = useAppSelector(
     (state) => state.settings
@@ -38,6 +37,7 @@ const MapEntitiesLayer = ({ active = true }: MapEntitiesLayerProps) => {
   const { activeTool } = useMapTool();
   const pickable = !isDrawToolActive(activeTool);
 
+  // Filter by visibility/membership only. Positions mutate in place on these objects.
   const visibleAirplanes = useMemo(
     () => (active ? liveAircraft.filter((a) => isItemVisible("airplanes", a.id)) : []),
     [active, liveAircraft, isItemVisible]
@@ -74,20 +74,9 @@ const MapEntitiesLayer = ({ active = true }: MapEntitiesLayerProps) => {
     [tracks]
   );
 
-  const layers = useMemo(() => {
+  const staticLayers = useMemo(() => {
     if (!active) return [];
     const result = [];
-
-    visibleTracks.forEach((track) => {
-      const aircraft = liveAircraft.find((a) => a.id === track.aircraftId);
-      if (aircraft) {
-        const pathLayers = createFlightPathLayer(
-          aircraft,
-          getTrackPath(track.aircraftId)
-        );
-        if (pathLayers) result.push(...pathLayers);
-      }
-    });
 
     if (visibleAirports.length > 0) {
       result.push(
@@ -109,6 +98,32 @@ const MapEntitiesLayer = ({ active = true }: MapEntitiesLayerProps) => {
       );
     }
 
+    return result;
+  }, [
+    active,
+    visibleAirports,
+    visibleAntennas,
+    handleAirportClick,
+    handleAntennaClick,
+    handleHover,
+    pickable,
+  ]);
+
+  const layers = useMemo(() => {
+    if (!active) return [];
+    const result = [...staticLayers];
+
+    visibleTracks.forEach((track) => {
+      const aircraft = liveAircraft.find((a) => a.id === track.aircraftId);
+      if (aircraft) {
+        const pathLayers = createFlightPathLayer(
+          aircraft,
+          getTrackPath(track.aircraftId)
+        );
+        if (pathLayers) result.push(...pathLayers);
+      }
+    });
+
     if (visibleAirplanes.length > 0) {
       result.push(
         ...createAircraftIconLayer(visibleAirplanes, {
@@ -117,25 +132,25 @@ const MapEntitiesLayer = ({ active = true }: MapEntitiesLayerProps) => {
           iconSize: airplaneSize,
           showAltitude: showAirplaneAltitude,
           pickable,
+          motionVersion,
         })
       );
     }
 
     return result;
   }, [
+    active,
+    staticLayers,
     visibleTracks,
     liveAircraft,
     getTrackPath,
     visibleAirplanes,
-    visibleAirports,
-    visibleAntennas,
     handleAircraftClick,
-    handleAirportClick,
-    handleAntennaClick,
     handleHover,
     airplaneSize,
     showAirplaneAltitude,
     pickable,
+    motionVersion,
   ]);
 
   return <DeckGLOverlay key={mapStyleId} layers={layers} />;

@@ -13,6 +13,8 @@ interface CreateAircraftLayerOptions {
   iconSize?: number;
   showAltitude?: boolean;
   pickable?: boolean;
+  /** Bumps when lat/lon/heading change so Deck re-reads accessors without new data objects. */
+  motionVersion?: number;
 }
 
 const iconMapping = getAircraftIconMapping();
@@ -27,7 +29,10 @@ export function createAircraftIconLayer(
     iconSize = 30,
     showAltitude = true,
     pickable = true,
+    motionVersion = 0,
   } = options;
+
+  const positionTriggers = { getPosition: motionVersion, getAngle: motionVersion };
 
   const layers: Layer[] = [
     new IconLayer({
@@ -50,6 +55,7 @@ export function createAircraftIconLayer(
       billboard: false,
       autoHighlight: true,
       highlightColor: [242, 201, 76, 200],
+      updateTriggers: positionTriggers,
       onHover: (info) => {
         if (onAircraftHover) {
           onAircraftHover((info.object as Aircraft) ?? null);
@@ -83,6 +89,10 @@ export function createAircraftIconLayer(
         outlineWidth: 2,
         outlineColor: [15, 17, 19, 200],
         billboard: true,
+        updateTriggers: {
+          getPosition: motionVersion,
+          getText: motionVersion,
+        },
       })
     );
   }

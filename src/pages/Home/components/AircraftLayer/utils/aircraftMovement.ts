@@ -9,6 +9,8 @@ export interface AircraftSimState {
 }
 
 const EARTH_RADIUS_NM = 3440.065;
+const DEG_TO_RAD = Math.PI / 180;
+const RAD_TO_DEG = 180 / Math.PI;
 
 export function haversineNm(
   lat1: number,
@@ -16,13 +18,27 @@ export function haversineNm(
   lat2: number,
   lon2: number
 ): number {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
+  const dLat = (lat2 - lat1) * DEG_TO_RAD;
+  const dLon = (lon2 - lon1) * DEG_TO_RAD;
   const a =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    Math.cos(lat1 * DEG_TO_RAD) *
+      Math.cos(lat2 * DEG_TO_RAD) *
+      Math.sin(dLon / 2) ** 2;
   return 2 * EARTH_RADIUS_NM * Math.asin(Math.sqrt(a));
+}
+
+/** Fast equirectangular distance in nm — accurate enough for short animation steps. */
+export function approxNm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const dLat = (lat2 - lat1) * 60;
+  const cosLat = Math.cos(lat1 * DEG_TO_RAD);
+  const dLon = (lon2 - lon1) * 60 * cosLat;
+  return Math.sqrt(dLat * dLat + dLon * dLon);
 }
 
 export function bearingDeg(
@@ -31,16 +47,14 @@ export function bearingDeg(
   lat2: number,
   lon2: number
 ): number {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const toDeg = (rad: number) => (rad * 180) / Math.PI;
-  const lat1r = toRad(lat1);
-  const lat2r = toRad(lat2);
-  const dLon = toRad(lon2 - lon1);
+  const lat1r = lat1 * DEG_TO_RAD;
+  const lat2r = lat2 * DEG_TO_RAD;
+  const dLon = (lon2 - lon1) * DEG_TO_RAD;
   const y = Math.sin(dLon) * Math.cos(lat2r);
   const x =
     Math.cos(lat1r) * Math.sin(lat2r) -
     Math.sin(lat1r) * Math.cos(lat2r) * Math.cos(dLon);
-  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+  return ((Math.atan2(y, x) * RAD_TO_DEG) + 360) % 360;
 }
 
 function interpolateLatLon(
@@ -105,7 +119,7 @@ export function initAircraftSim(aircraft: Aircraft): AircraftSimState {
       route[i],
       route[i + 1]
     );
-    const dist = haversineNm(
+    const dist = approxNm(
       aircraft.lat,
       aircraft.lon,
       projected.lat,
@@ -130,22 +144,26 @@ export function initAircraftSim(aircraft: Aircraft): AircraftSimState {
   };
 }
 
-export function advanceAircraftSim(
+/**
+ * Advance simulation by mutating `state` in place (avoids per-frame allocations).
+ */
+export function advanceAircraftSimInPlace(
   state: AircraftSimState,
   route: [number, number][],
   speedKts: number,
   deltaSeconds: number
-): AircraftSimState {
+): void {
   let distanceNm = (speedKts / 3600) * deltaSeconds;
-  if (distanceNm <= 0) return state;
+  if (distanceNm <= 0) return;
 
   let { lat, lon, segmentIndex, progress, heading_deg } = state;
+  const prevSegment = segmentIndex;
 
   if (route.length >= 2 && segmentIndex < route.length - 1) {
     while (distanceNm > 0 && segmentIndex < route.length - 1) {
       const [lat1, lon1] = route[segmentIndex];
       const [lat2, lon2] = route[segmentIndex + 1];
-      const segLen = haversineNm(lat1, lon1, lat2, lon2);
+      const segLen = approxNm(lat1, lon1, lat2, lon2);
 
       if (segLen === 0) {
         segmentIndex++;
@@ -167,14 +185,14 @@ export function advanceAircraftSim(
         }
       } else {
         progress += distanceNm / segLen;
-        const next = interpolateLatLon(lat1, lon1, lat2, lon2, progress);
-        lat = next.lat;
-        lon = next.lon;
+        lat = lat1 + (lat2 - lat1) * progress;
+        lon = lon1 + (lon2 - lon1) * progress;
         distanceNm = 0;
       }
     }
 
-    if (segmentIndex < route.length - 1) {
+    // Only recompute bearing when the active segment changes (or first tick on path).
+    if (segmentIndex !== prevSegment && segmentIndex < route.length - 1) {
       const nextIdx = segmentIndex + 1;
       const computedHeading = bearingDeg(
         lat,
@@ -182,29 +200,39 @@ export function advanceAircraftSim(
         route[nextIdx][0],
         route[nextIdx][1]
       );
-      if (!isNaN(computedHeading)) {
+      if (!Number.isNaN(computedHeading)) {
         heading_deg = Math.round(computedHeading) % 360;
       }
     }
   }
 
-  // If there is leftover distance (reached end of route or route < 2), dead reckon along current heading
   if (distanceNm > 0) {
-    const headingRad = (heading_deg * Math.PI) / 180;
+    const headingRad = heading_deg * DEG_TO_RAD;
     const dLat = (distanceNm / 60) * Math.cos(headingRad);
-    const cosLat = Math.max(0.01, Math.cos((lat * Math.PI) / 180));
+    const cosLat = Math.max(0.01, Math.cos(lat * DEG_TO_RAD));
     const dLon = (distanceNm / (60 * cosLat)) * Math.sin(headingRad);
     lat += dLat;
     lon += dLon;
   }
 
-  return {
-    lat,
-    lon,
-    heading_deg,
-    segmentIndex: route.length >= 2 ? Math.min(segmentIndex, route.length - 2) : 0,
-    progress: Math.min(1, Math.max(0, progress)),
-  };
+  state.lat = lat;
+  state.lon = lon;
+  state.heading_deg = heading_deg;
+  state.segmentIndex =
+    route.length >= 2 ? Math.min(segmentIndex, route.length - 2) : 0;
+  state.progress = Math.min(1, Math.max(0, progress));
+}
+
+/** Immutable wrapper kept for callers that expect a new object. */
+export function advanceAircraftSim(
+  state: AircraftSimState,
+  route: [number, number][],
+  speedKts: number,
+  deltaSeconds: number
+): AircraftSimState {
+  const next: AircraftSimState = { ...state };
+  advanceAircraftSimInPlace(next, route, speedKts, deltaSeconds);
+  return next;
 }
 
 export function formatHeading(heading: number): number {
