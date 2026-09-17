@@ -99,6 +99,10 @@ button {
   display: none;
 }
 
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  display: none !important;
+}
+
 .aircraft-popup .maplibregl-popup-content,
 .aircraft-popup .mapboxgl-popup-content {
   padding: 0;
