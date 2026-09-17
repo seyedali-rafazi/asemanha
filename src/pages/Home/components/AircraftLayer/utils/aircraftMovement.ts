@@ -94,13 +94,46 @@ function projectOnSegment(
   return { ...point, t };
 }
 
-export function initAircraftSim(aircraft: Aircraft): AircraftSimState {
+/** Coerce API/path heading to a finite 0–359 value, or null if unknown. */
+export function normalizeHeading(value: unknown): number | null {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return null;
+  return ((Math.round(n) % 360) + 360) % 360;
+}
+
+/** Prefer telemetry heading; fall back to path bearing toward the next waypoint. */
+export function resolveHeadingDeg(
+  aircraft: Pick<Aircraft, "heading_deg" | "path">,
+  lat: number,
+  lon: number,
+  segmentIndex = 0
+): number {
+  const fromTelemetry = normalizeHeading(aircraft.heading_deg);
+  if (fromTelemetry !== null) return fromTelemetry;
+
   const route = aircraft.path;
+  if (route && route.length >= 2) {
+    const seg = Math.min(Math.max(0, segmentIndex), route.length - 2);
+    const next = route[seg + 1];
+    const fromPath = normalizeHeading(bearingDeg(lat, lon, next[0], next[1]));
+    if (fromPath !== null) return fromPath;
+
+    const a = route[route.length - 2];
+    const b = route[route.length - 1];
+    const fromLast = normalizeHeading(bearingDeg(a[0], a[1], b[0], b[1]));
+    if (fromLast !== null) return fromLast;
+  }
+
+  return 0;
+}
+
+export function initAircraftSim(aircraft: Aircraft): AircraftSimState {
+  const route = aircraft.path ?? [];
   if (route.length < 2) {
     return {
       lat: aircraft.lat,
       lon: aircraft.lon,
-      heading_deg: aircraft.heading_deg,
+      heading_deg: resolveHeadingDeg(aircraft, aircraft.lat, aircraft.lon, 0),
       segmentIndex: 0,
       progress: 0,
     };
@@ -134,11 +167,10 @@ export function initAircraftSim(aircraft: Aircraft): AircraftSimState {
     }
   }
 
-  const next = route[Math.min(bestSeg + 1, route.length - 1)];
   return {
     lat: bestLat,
     lon: bestLon,
-    heading_deg: formatHeading(bearingDeg(bestLat, bestLon, next[0], next[1])),
+    heading_deg: resolveHeadingDeg(aircraft, bestLat, bestLon, bestSeg),
     segmentIndex: bestSeg,
     progress: bestProgress,
   };
@@ -154,10 +186,22 @@ export function advanceAircraftSimInPlace(
   deltaSeconds: number
 ): void {
   let distanceNm = (speedKts / 3600) * deltaSeconds;
-  if (distanceNm <= 0) return;
+  if (distanceNm <= 0) {
+    // Still align nose when stopped / zero-speed updates.
+    if (route.length >= 2 && state.segmentIndex < route.length - 1) {
+      const next = route[state.segmentIndex + 1];
+      const h = normalizeHeading(
+        bearingDeg(state.lat, state.lon, next[0], next[1])
+      );
+      if (h !== null) state.heading_deg = h;
+    } else if (!Number.isFinite(state.heading_deg)) {
+      state.heading_deg = 0;
+    }
+    return;
+  }
 
   let { lat, lon, segmentIndex, progress, heading_deg } = state;
-  const prevSegment = segmentIndex;
+  if (!Number.isFinite(heading_deg)) heading_deg = 0;
 
   if (route.length >= 2 && segmentIndex < route.length - 1) {
     while (distanceNm > 0 && segmentIndex < route.length - 1) {
@@ -191,17 +235,14 @@ export function advanceAircraftSimInPlace(
       }
     }
 
-    // Only recompute bearing when the active segment changes (or first tick on path).
-    if (segmentIndex !== prevSegment && segmentIndex < route.length - 1) {
+    // Keep nose aligned with the active path segment.
+    if (segmentIndex < route.length - 1) {
       const nextIdx = segmentIndex + 1;
-      const computedHeading = bearingDeg(
-        lat,
-        lon,
-        route[nextIdx][0],
-        route[nextIdx][1]
+      const computedHeading = normalizeHeading(
+        bearingDeg(lat, lon, route[nextIdx][0], route[nextIdx][1])
       );
-      if (!Number.isNaN(computedHeading)) {
-        heading_deg = Math.round(computedHeading) % 360;
+      if (computedHeading !== null) {
+        heading_deg = computedHeading;
       }
     }
   }

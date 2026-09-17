@@ -14,6 +14,8 @@ import {
   advanceAircraftSimInPlace,
   buildTrackPath,
   initAircraftSim,
+  normalizeHeading,
+  resolveHeadingDeg,
   type AircraftSimState,
 } from "../utils/aircraftMovement";
 import { useLocation } from "react-router-dom";
@@ -141,7 +143,8 @@ export function LiveAircraftProvider({
   }, []);
 
   /**
-   * Updates state with fresh real aircraft list from backend
+   * Merge telemetry into the live fleet in place.
+   * Never clears the whole list and rebuilds — add / update / soft-remove only.
    */
   const handleIncomingAircraft = useCallback(
     (incoming: Aircraft[] = [], cached: boolean = false, time?: number) => {
@@ -151,8 +154,34 @@ export function LiveAircraftProvider({
       const fleetMap = fleetMapRef.current;
       const lastSeenMap = lastSeenRef.current;
       const vp = currentViewportRef.current;
+      const liveList = aircraftRef.current;
+      const liveById = new Map(liveList.map((a) => [a.id, a]));
+
+      // Empty / failed payloads must not wipe the map.
+      if (!incoming.length) {
+        let removed = false;
+        for (const [id, seenTime] of [...lastSeenMap.entries()]) {
+          if (nowSec - seenTime <= 120) continue;
+          fleetMap.delete(id);
+          simMap.delete(id);
+          routeMap.delete(id);
+          lastSeenMap.delete(id);
+          if (liveById.delete(id)) removed = true;
+        }
+        if (removed) {
+          aircraftRef.current = liveList.filter((a) => liveById.has(a.id));
+          motionVersionRef.current += 1;
+          notifyMotion();
+          notifyFleet();
+        }
+        setIsCached(cached);
+        setLastUpdated(nowSec);
+        return;
+      }
 
       const incomingIds = new Set<string>();
+      let membershipChanged = false;
+      let metadataTouched = false;
 
       for (const item of incoming) {
         if (!item || !item.id) continue;
@@ -174,14 +203,63 @@ export function LiveAircraftProvider({
           if (latDiff > 0.03 || lonDiff > 0.03) {
             sim.lat = item.lat;
             sim.lon = item.lon;
-            sim.heading_deg = item.heading_deg;
           }
+          const nextHeading = normalizeHeading(item.heading_deg);
+          if (nextHeading !== null) {
+            sim.heading_deg = nextHeading;
+          } else if (!Number.isFinite(sim.heading_deg)) {
+            sim.heading_deg = resolveHeadingDeg(
+              item,
+              sim.lat,
+              sim.lon,
+              sim.segmentIndex
+            );
+          }
+        }
+
+        const existing = liveById.get(item.id);
+        if (existing) {
+          // Update fields in place — keep the same object identity for Deck.gl.
+          existing.callsign = item.callsign;
+          existing.airline = item.airline;
+          existing.aircraftType = item.aircraftType;
+          existing.aircraft_icao = item.aircraft_icao;
+          existing.category = item.category;
+          existing.model = item.model;
+          existing.manufacturer = item.manufacturer;
+          existing.altitude_ft = item.altitude_ft;
+          existing.speed_kts = item.speed_kts;
+          existing.origin_city = item.origin_city;
+          existing.destination_city = item.destination_city;
+          existing.path = item.path;
+          existing.lastUpdate = item.lastUpdate;
+          existing.lat = sim.lat;
+          existing.lon = sim.lon;
+          existing.heading_deg = Number.isFinite(sim.heading_deg)
+            ? sim.heading_deg
+            : resolveHeadingDeg(item, sim.lat, sim.lon, sim.segmentIndex);
+          metadataTouched = true;
+        } else {
+          const live: Aircraft = {
+            ...item,
+            lat: sim.lat,
+            lon: sim.lon,
+            heading_deg: Number.isFinite(sim.heading_deg)
+              ? sim.heading_deg
+              : resolveHeadingDeg(item, sim.lat, sim.lon, sim.segmentIndex),
+          };
+          liveList.push(live);
+          liveById.set(item.id, live);
+          membershipChanged = true;
         }
       }
 
+      // Soft prune: stale, or outside view and missing from this non-empty batch for a while.
+      const toRemove: string[] = [];
       for (const [id, seenTime] of lastSeenMap.entries()) {
         const item = fleetMap.get(id);
-        const isStale = nowSec - seenTime > 120;
+        const age = nowSec - seenTime;
+        const isStale = age > 120;
 
         let isOutOfView = false;
         if (vp && item) {
@@ -201,30 +279,42 @@ export function LiveAircraftProvider({
           }
         }
 
-        if (isStale || (isOutOfView && !incomingIds.has(id))) {
+        // Grace period so a partial/new-bbox response does not wipe the fleet.
+        const missingLongEnough = age > 45;
+        if (
+          isStale ||
+          (isOutOfView && !incomingIds.has(id) && missingLongEnough)
+        ) {
+          toRemove.push(id);
+        }
+      }
+
+      if (toRemove.length > 0) {
+        for (const id of toRemove) {
           fleetMap.delete(id);
           simMap.delete(id);
           routeMap.delete(id);
           lastSeenMap.delete(id);
+          liveById.delete(id);
         }
+        aircraftRef.current = liveList.filter((a) => liveById.has(a.id));
+        membershipChanged = true;
+      } else if (membershipChanged) {
+        // New planes were pushed onto the same array — expose a new ref for subscribers.
+        aircraftRef.current = liveList.slice();
       }
-
-      // Mutable live copies — animation loop updates lat/lon/heading in place.
-      aircraftRef.current = Array.from(fleetMap.values()).map((item) => {
-        const sim = simMap.get(item.id);
-        return {
-          ...item,
-          lat: sim ? sim.lat : item.lat,
-          lon: sim ? sim.lon : item.lon,
-          heading_deg: sim ? sim.heading_deg : item.heading_deg,
-        };
-      });
 
       motionVersionRef.current += 1;
       setIsCached(cached);
       setLastUpdated(nowSec);
       notifyMotion();
-      notifyFleet();
+      if (membershipChanged || metadataTouched) {
+        // Fleet hook compares snapshot by reference; ensure it changes.
+        if (aircraftRef.current === liveList) {
+          aircraftRef.current = liveList.slice();
+        }
+        notifyFleet();
+      }
     },
     [notifyMotion, notifyFleet]
   );
@@ -234,15 +324,19 @@ export function LiveAircraftProvider({
     refetchInterval: 10000,
   });
 
+  // Sync React Query updates into live fleet (skip placeholder/previous bbox data).
   useEffect(() => {
-    if (aircraftQuery.data) {
-      handleIncomingAircraft(
-        aircraftQuery.data.aircraft || [],
-        aircraftQuery.data.cached,
-        aircraftQuery.data.time
-      );
-    }
-  }, [aircraftQuery.data, handleIncomingAircraft]);
+    if (!aircraftQuery.data || aircraftQuery.isPlaceholderData) return;
+    handleIncomingAircraft(
+      aircraftQuery.data.aircraft || [],
+      aircraftQuery.data.cached,
+      aircraftQuery.data.time
+    );
+  }, [
+    aircraftQuery.data,
+    aircraftQuery.isPlaceholderData,
+    handleIncomingAircraft,
+  ]);
 
   const updateViewport = useCallback((bbox: BboxParams, zoom?: number) => {
     const nextViewport = { ...bbox, zoom };
@@ -299,7 +393,9 @@ export function LiveAircraftProvider({
           advanceAircraftSimInPlace(sim, route, item.speed_kts, simDelta);
           item.lat = sim.lat;
           item.lon = sim.lon;
-          item.heading_deg = sim.heading_deg;
+          item.heading_deg = Number.isFinite(sim.heading_deg)
+            ? sim.heading_deg
+            : resolveHeadingDeg(item, sim.lat, sim.lon, sim.segmentIndex);
           moved = true;
         }
 

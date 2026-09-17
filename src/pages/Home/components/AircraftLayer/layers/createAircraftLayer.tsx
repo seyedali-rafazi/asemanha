@@ -51,7 +51,10 @@ export function createAircraftIconLayer(
       sizeUnits: "pixels",
       getSize: iconSize,
       // Deck.gl angles are counter-clockwise from up; heading is clockwise from north.
-      getAngle: (d) => -(d.heading_deg || 0),
+      getAngle: (d) => {
+        const heading = Number(d.heading_deg);
+        return Number.isFinite(heading) ? -heading : 0;
+      },
       billboard: false,
       autoHighlight: true,
       highlightColor: [242, 201, 76, 200],
