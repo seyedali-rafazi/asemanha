@@ -148,9 +148,7 @@ export default function SettingsPanel() {
             }
             label={
               <Typography variant="body2">
-                {showAirplaneAltitude
-                  ? "Show altitude labels"
-                  : "Hide altitude labels"}
+                Show altitude labels
               </Typography>
             }
           />

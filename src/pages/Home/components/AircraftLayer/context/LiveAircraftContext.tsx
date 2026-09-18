@@ -43,6 +43,7 @@ interface LiveAircraftContextValue {
   subscribe: (listener: Listener) => () => void;
   getSnapshot: () => Aircraft[];
   getMotionVersion: () => number;
+  getTelemetryVersion: () => number;
   wsStatus: WebSocketStatus;
   isCached: boolean;
   lastUpdated: number | null;
@@ -92,6 +93,7 @@ export function LiveAircraftProvider({
   const lastSeenRef = useRef<Map<string, number>>(new Map());
   const aircraftRef = useRef<Aircraft[]>([]);
   const motionVersionRef = useRef(0);
+  const telemetryVersionRef = useRef(0);
 
   const [wsStatus] = useState<WebSocketStatus>("disconnected");
   const [isCached, setIsCached] = useState<boolean>(false);
@@ -133,6 +135,7 @@ export function LiveAircraftProvider({
 
   const getSnapshot = useCallback(() => aircraftRef.current, []);
   const getMotionVersion = useCallback(() => motionVersionRef.current, []);
+  const getTelemetryVersion = useCallback(() => telemetryVersionRef.current, []);
 
   const notifyMotion = useCallback(() => {
     motionListenersRef.current.forEach((listener) => listener());
@@ -171,6 +174,7 @@ export function LiveAircraftProvider({
         if (removed) {
           aircraftRef.current = liveList.filter((a) => liveById.has(a.id));
           motionVersionRef.current += 1;
+          telemetryVersionRef.current += 1;
           notifyMotion();
           notifyFleet();
         }
@@ -313,6 +317,7 @@ export function LiveAircraftProvider({
         if (aircraftRef.current === liveList) {
           aircraftRef.current = liveList.slice();
         }
+        telemetryVersionRef.current += 1;
         notifyFleet();
       }
     },
@@ -442,6 +447,7 @@ export function LiveAircraftProvider({
       subscribe,
       getSnapshot,
       getMotionVersion,
+      getTelemetryVersion,
       wsStatus,
       isCached,
       lastUpdated,
@@ -459,6 +465,7 @@ export function LiveAircraftProvider({
       subscribe,
       getSnapshot,
       getMotionVersion,
+      getTelemetryVersion,
       wsStatus,
       isCached,
       lastUpdated,
@@ -520,6 +527,20 @@ export function useLiveAircraftMotionVersion(): number {
     context.subscribeMotion,
     context.getMotionVersion,
     context.getMotionVersion
+  );
+}
+
+export function useLiveAircraftTelemetryVersion(): number {
+  const context = useContext(LiveAircraftContext);
+  if (!context) {
+    throw new Error(
+      "useLiveAircraftTelemetryVersion must be used within LiveAircraftProvider"
+    );
+  }
+  return useSyncExternalStore(
+    context.subscribeFleet,
+    context.getTelemetryVersion,
+    context.getTelemetryVersion
   );
 }
 

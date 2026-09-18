@@ -15,9 +15,27 @@ interface CreateAircraftLayerOptions {
   pickable?: boolean;
   /** Bumps when lat/lon/heading change so Deck re-reads accessors without new data objects. */
   motionVersion?: number;
+  /** Bumps only when new telemetry metadata arrives from the API or fleet members change. */
+  telemetryVersion?: number;
 }
 
 const iconMapping = getAircraftIconMapping();
+
+const altitudeCache = new Map<number, string>();
+
+function formatAltitude(altitude?: number): string {
+  if (altitude == null || !Number.isFinite(altitude)) return "0 ft";
+  const rounded = Math.round(altitude);
+  let formatted = altitudeCache.get(rounded);
+  if (!formatted) {
+    formatted = `${rounded.toLocaleString()} ft`;
+    if (altitudeCache.size > 2000) {
+      altitudeCache.clear();
+    }
+    altitudeCache.set(rounded, formatted);
+  }
+  return formatted;
+}
 
 export function createAircraftIconLayer(
   data: Aircraft[],
@@ -30,6 +48,7 @@ export function createAircraftIconLayer(
     showAltitude = true,
     pickable = true,
     motionVersion = 0,
+    telemetryVersion = 0,
   } = options;
 
   const positionTriggers = { getPosition: motionVersion, getAngle: motionVersion };
@@ -83,18 +102,22 @@ export function createAircraftIconLayer(
         data,
         pickable: false,
         getPosition: (d) => [d.lon, d.lat, d.altitude_ft ?? 0],
-        getText: (d) => `${(d.altitude_ft ?? 0).toLocaleString()} ft`,
+        getText: (d) => formatAltitude(d.altitude_ft),
         getSize: 12,
+        sizeUnits: "pixels",
+        characterSet: "0123456789, ft—",
+        fontSettings: { sdf: true },
         getColor: [255, 255, 255, 230],
         getPixelOffset: [0, -(iconSize / 2 + 10)],
-        fontFamily: "system-ui, sans-serif",
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
         fontWeight: 600,
         outlineWidth: 2,
         outlineColor: [15, 17, 19, 200],
         billboard: true,
         updateTriggers: {
           getPosition: motionVersion,
-          getText: motionVersion,
+          getText: telemetryVersion,
         },
       })
     );

@@ -28,8 +28,9 @@ const MapEntitiesLayer = ({ active = true }: MapEntitiesLayerProps) => {
   const { isItemVisible, selectEntity, airports, antennas } = useMapLayers();
   const { tracks } = useAircraft();
   const liveAircraft = useLiveAircraftSnapshot();
-  const { getTrackPath, getMotionVersion } = useLiveAircraftEngine();
+  const { getTrackPath, getMotionVersion, getTelemetryVersion } = useLiveAircraftEngine();
   const motionVersion = getMotionVersion();
+  const telemetryVersion = getTelemetryVersion();
   const handleHover = useStableMapCursor("map-entities");
   const { airplaneSize, showAirplaneAltitude, mapStyleId } = useAppSelector(
     (state) => state.settings
@@ -133,6 +134,7 @@ const MapEntitiesLayer = ({ active = true }: MapEntitiesLayerProps) => {
           showAltitude: showAirplaneAltitude,
           pickable,
           motionVersion,
+          telemetryVersion,
         })
       );
     }
@@ -151,6 +153,7 @@ const MapEntitiesLayer = ({ active = true }: MapEntitiesLayerProps) => {
     showAirplaneAltitude,
     pickable,
     motionVersion,
+    telemetryVersion,
   ]);
 
   return <DeckGLOverlay key={mapStyleId} layers={layers} />;
