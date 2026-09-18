@@ -327,7 +327,7 @@ export default function LayersPanel() {
                   {(selectedData as Aircraft).origin_city} → {(selectedData as Aircraft).destination_city}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" display="block">
-                  Alt: {(selectedData as Aircraft).altitude_ft.toLocaleString()} ft · {(selectedData as Aircraft).speed_kts} kts
+                  Alt: {(selectedData as Aircraft).altitude_ft != null ? `${(selectedData as Aircraft).altitude_ft.toLocaleString()} ft` : "—"} · {(selectedData as Aircraft).speed_kts ?? "—"} kts
                 </Typography>
               </>
             )}

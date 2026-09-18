@@ -17,7 +17,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import { useAircraft } from "../AircraftLayer/context/AircraftContext";
 import { useLiveAircraftEngine } from "../AircraftLayer/context/LiveAircraftContext";
@@ -100,24 +100,37 @@ function AircraftPopupContent({
           <Box sx={{ flex: 1, p: 0.75, borderRadius: 1.5, bgcolor: "rgba(255,255,255,0.06)", textAlign: "center" }}>
             <Terrain sx={{ color: "primary.main", fontSize: 14 }} />
             <Typography variant="caption" display="block" fontSize="0.6rem" sx={{ color: popupMuted }}>Alt</Typography>
-            <Typography variant="caption" fontWeight={700} sx={{ color: popupText }}>{aircraft.altitude_ft.toLocaleString()} ft</Typography>
+            <Typography variant="caption" fontWeight={700} sx={{ color: popupText }}>
+              {aircraft?.altitude_ft != null ? `${aircraft.altitude_ft.toLocaleString()} ft` : "—"}
+            </Typography>
           </Box>
           <Box sx={{ flex: 1, p: 0.75, borderRadius: 1.5, bgcolor: "rgba(255,255,255,0.06)", textAlign: "center" }}>
             <Speed sx={{ color: "primary.main", fontSize: 14 }} />
             <Typography variant="caption" display="block" fontSize="0.6rem" sx={{ color: popupMuted }}>Speed</Typography>
-            <Typography variant="caption" fontWeight={700} sx={{ color: popupText }}>{aircraft.speed_kts} kts</Typography>
+            <Typography variant="caption" fontWeight={700} sx={{ color: popupText }}>
+              {aircraft?.speed_kts != null ? `${aircraft.speed_kts} kts` : "—"}
+            </Typography>
           </Box>
           <Box sx={{ flex: 1, p: 0.75, borderRadius: 1.5, bgcolor: "rgba(255,255,255,0.06)", textAlign: "center" }}>
             <Route sx={{ color: "primary.main", fontSize: 14 }} />
             <Typography variant="caption" display="block" fontSize="0.6rem" sx={{ color: popupMuted }}>Hdg</Typography>
-            <Typography variant="caption" fontWeight={700} sx={{ color: popupText }}>{formatHeading(aircraft.heading_deg)}°</Typography>
+            <Typography variant="caption" fontWeight={700} sx={{ color: popupText }}>
+              {aircraft?.heading_deg != null ? `${formatHeading(aircraft.heading_deg)}°` : "—"}
+            </Typography>
           </Box>
         </Stack>
         <Divider sx={{ mb: 0.75 }} />
         <InfoRow label="Flight ID" value={aircraft.id} />
-        <InfoRow label="Origin" value={aircraft.origin_city} />
-        <InfoRow label="Destination" value={aircraft.destination_city} />
-        <InfoRow label="Position" value={`${aircraft.lat.toFixed(3)}°, ${aircraft.lon.toFixed(3)}°`} />
+        <InfoRow label="Origin" value={aircraft.origin_city || "—"} />
+        <InfoRow label="Destination" value={aircraft.destination_city || "—"} />
+        <InfoRow
+          label="Position"
+          value={
+            aircraft?.lat != null && aircraft?.lon != null
+              ? `${aircraft.lat.toFixed(3)}°, ${aircraft.lon.toFixed(3)}°`
+              : "—"
+          }
+        />
         <Button
           fullWidth
           size="small"
@@ -164,12 +177,12 @@ function AirportPopupContent({
           <Box>
             <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
               <Flight sx={{ color: "primary.main", fontSize: 18 }} />
-              <Typography variant="subtitle2" fontWeight={700}>
-                {airport.name}
+              <Typography color="text.secondary" variant="subtitle2" fontWeight={700}>
+                {airport?.name || "Airport"}
               </Typography>
             </Stack>
             <Typography variant="caption" color="text.secondary">
-              {airport.city}, {airport.country}
+              {[airport?.city, airport?.country].filter(Boolean).join(", ")}
             </Typography>
           </Box>
           <IconButton size="small" onClick={onClose} sx={{ color: "text.secondary" }}>
@@ -178,11 +191,25 @@ function AirportPopupContent({
         </Stack>
       </Box>
       <Box sx={{ px: 1.5, py: 1.25 }}>
-        <InfoRow label="IATA" value={airport.iata} />
-        <InfoRow label="ICAO" value={airport.icao} />
-        <InfoRow label="Elevation" value={`${airport.elevation_ft.toLocaleString()} ft`} />
-        <InfoRow label="Runways" value={airport.runways} />
-        <InfoRow label="Position" value={`${airport.lat.toFixed(3)}°, ${airport.lon.toFixed(3)}°`} />
+        <InfoRow label="IATA" value={airport?.iata || "—"} />
+        <InfoRow label="ICAO" value={airport?.icao || "—"} />
+        <InfoRow
+          label="Elevation"
+          value={
+            airport?.elevation_ft != null
+              ? `${airport.elevation_ft.toLocaleString()} ft`
+              : "—"
+          }
+        />
+        <InfoRow label="Runways" value={airport?.runways ?? "—"} />
+        <InfoRow
+          label="Position"
+          value={
+            airport?.lat != null && airport?.lon != null
+              ? `${airport.lat.toFixed(3)}°, ${airport.lon.toFixed(3)}°`
+              : "—"
+          }
+        />
       </Box>
     </>
   );
@@ -210,12 +237,12 @@ function AntennaPopupContent({
           <Box>
             <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
               <CellTower sx={{ color: "#a78bfa", fontSize: 18 }} />
-              <Typography variant="subtitle2" fontWeight={700}>
-                {antenna.name}
+              <Typography color="text.secondary" variant="subtitle2" fontWeight={700}>
+                {antenna?.name || "Antenna"}
               </Typography>
             </Stack>
             <Chip
-              label={antenna.type}
+              label={antenna?.type || "Antenna"}
               size="small"
               sx={{ height: 18, fontSize: "0.65rem", bgcolor: "#7c3aed", color: "#fff" }}
             />
@@ -226,11 +253,21 @@ function AntennaPopupContent({
         </Stack>
       </Box>
       <Box sx={{ px: 1.5, py: 1.25 }}>
-        <InfoRow label="Frequency" value={antenna.frequency} />
-        <InfoRow label="Range" value={`${antenna.range_km} km`} />
-        <InfoRow label="Operator" value={antenna.operator} />
-        <InfoRow label="Status" value={antenna.status} />
-        <InfoRow label="Position" value={`${antenna.lat.toFixed(3)}°, ${antenna.lon.toFixed(3)}°`} />
+        <InfoRow label="Frequency" value={antenna?.frequency || "—"} />
+        <InfoRow
+          label="Range"
+          value={antenna?.range_km != null ? `${antenna.range_km} km` : "—"}
+        />
+        <InfoRow label="Operator" value={antenna?.operator || "—"} />
+        <InfoRow label="Status" value={antenna?.status || "—"} />
+        <InfoRow
+          label="Position"
+          value={
+            antenna?.lat != null && antenna?.lon != null
+              ? `${antenna.lat.toFixed(3)}°, ${antenna.lon.toFixed(3)}°`
+              : "—"
+          }
+        />
       </Box>
     </>
   );
@@ -241,40 +278,80 @@ export default function MapItemPopup() {
   const { selectedEntity, selectEntity, getEntityData } = useMapLayers();
   const { getAircraftById } = useLiveAircraftEngine();
   const skipCloseRef = useRef(false);
-  const [frozen, setFrozen] = useState<{
+
+  const [frozenAircraft, setFrozenAircraft] = useState<{
+    id: string;
     anchor: { lon: number; lat: number };
-    entity: Aircraft | Airport | Antenna;
+    aircraft: Aircraft;
   } | null>(null);
 
-  useEffect(() => {
-    if (!selectedEntity) {
-      setFrozen(null);
-      return;
+  // Synchronously compute active entity and anchor based on selectedEntity
+  const activeData = useMemo(() => {
+    if (!selectedEntity) return null;
+
+    if (selectedEntity.category === "airports") {
+      const airport = getEntityData("airports", selectedEntity.id) as Airport | null;
+      if (!airport || airport.lat == null || airport.lon == null) return null;
+      return {
+        category: "airports" as const,
+        anchor: { lon: airport.lon, lat: airport.lat },
+        airport,
+      };
+    }
+
+    if (selectedEntity.category === "antennas") {
+      const antenna = getEntityData("antennas", selectedEntity.id) as Antenna | null;
+      if (!antenna || antenna.lat == null || antenna.lon == null) return null;
+      return {
+        category: "antennas" as const,
+        anchor: { lon: antenna.lon, lat: antenna.lat },
+        antenna,
+      };
     }
 
     if (selectedEntity.category === "airplanes") {
-      const live = getAircraftById(selectedEntity.id);
-      const fallback = getEntityData("airplanes", selectedEntity.id);
-      const aircraft = live ?? fallback;
-      if (aircraft) {
-        setFrozen({
-          anchor: { lon: aircraft.lon, lat: aircraft.lat },
-          entity: { ...aircraft },
-        });
+      if (frozenAircraft && frozenAircraft.id === selectedEntity.id) {
+        return {
+          category: "airplanes" as const,
+          anchor: frozenAircraft.anchor,
+          aircraft: frozenAircraft.aircraft,
+        };
       }
+      const live = getAircraftById(selectedEntity.id);
+      const fallback = getEntityData("airplanes", selectedEntity.id) as Aircraft | null;
+      const aircraft = live ?? fallback;
+      if (!aircraft || aircraft.lat == null || aircraft.lon == null) return null;
+      return {
+        category: "airplanes" as const,
+        anchor: { lon: aircraft.lon, lat: aircraft.lat },
+        aircraft,
+      };
+    }
+
+    return null;
+  }, [selectedEntity, getEntityData, getAircraftById, frozenAircraft]);
+
+  // Keep frozen aircraft updated when an airplane is selected
+  useEffect(() => {
+    if (!selectedEntity || selectedEntity.category !== "airplanes") {
+      if (frozenAircraft) setFrozenAircraft(null);
       return;
     }
-
-    const entity = getEntityData(selectedEntity.category, selectedEntity.id);
-    if (entity && "lat" in entity && "lon" in entity) {
-      setFrozen({
-        anchor: { lon: entity.lon, lat: entity.lat },
-        entity,
-      });
+    if (frozenAircraft?.id !== selectedEntity.id) {
+      const live = getAircraftById(selectedEntity.id);
+      const fallback = getEntityData("airplanes", selectedEntity.id) as Aircraft | null;
+      const aircraft = live ?? fallback;
+      if (aircraft && aircraft.lat != null && aircraft.lon != null) {
+        setFrozenAircraft({
+          id: selectedEntity.id,
+          anchor: { lon: aircraft.lon, lat: aircraft.lat },
+          aircraft: { ...aircraft },
+        });
+      }
     }
-  }, [selectedEntity?.id, selectedEntity?.category, getAircraftById, getEntityData]);
+  }, [selectedEntity, frozenAircraft, getAircraftById, getEntityData]);
 
-  const position = usePopupScreenPosition(frozen?.anchor ?? null);
+  const position = usePopupScreenPosition(activeData?.anchor ?? null);
 
   useEffect(() => {
     if (!selectedEntity) return;
@@ -303,10 +380,9 @@ export default function MapItemPopup() {
     };
   }, [selectedEntity, mapRef, selectEntity]);
 
-  if (!selectedEntity || !frozen || !position) return null;
+  if (!selectedEntity || !activeData || !position) return null;
 
   const handleClose = () => selectEntity(selectedEntity.category, null);
-  const displayEntity = frozen.entity;
 
   return (
     <Box
@@ -329,14 +405,14 @@ export default function MapItemPopup() {
           boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
         }}
       >
-        {selectedEntity.category === "airplanes" && (
-          <AircraftPopupContent aircraft={displayEntity as Aircraft} onClose={handleClose} />
+        {activeData.category === "airplanes" && (
+          <AircraftPopupContent aircraft={activeData.aircraft} onClose={handleClose} />
         )}
-        {selectedEntity.category === "airports" && (
-          <AirportPopupContent airport={displayEntity as Airport} onClose={handleClose} />
+        {activeData.category === "airports" && (
+          <AirportPopupContent airport={activeData.airport} onClose={handleClose} />
         )}
-        {selectedEntity.category === "antennas" && (
-          <AntennaPopupContent antenna={displayEntity as Antenna} onClose={handleClose} />
+        {activeData.category === "antennas" && (
+          <AntennaPopupContent antenna={activeData.antenna} onClose={handleClose} />
         )}
       </Box>
     </Box>

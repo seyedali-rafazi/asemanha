@@ -114,7 +114,7 @@ function AircraftCard({ aircraft }: AircraftCardProps) {
         <Stack direction="row" spacing={0.75}>
           <Chip
             icon={<Terrain sx={{ fontSize: "14px !important", color: "rgba(255,255,255,0.7) !important" }} />}
-            label={`${aircraft.altitude_ft.toLocaleString()} ft`}
+            label={`${(aircraft.altitude_ft ?? 0).toLocaleString()} ft`}
             size="small"
             sx={{ height: 24, fontSize: "0.7rem", bgcolor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.88)" }}
           />

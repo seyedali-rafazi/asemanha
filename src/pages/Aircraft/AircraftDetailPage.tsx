@@ -328,7 +328,7 @@ export default function AircraftDetailPage() {
           <InfoBlock
             icon={<Terrain sx={{ fontSize: 18, color: "primary.main" }} />}
             label="Altitude"
-            value={`${aircraft.altitude_ft.toLocaleString()} ft`}
+            value={aircraft.altitude_ft != null ? `${aircraft.altitude_ft.toLocaleString()} ft` : "—"}
             delay={0}
           />
           <InfoBlock
@@ -419,9 +419,11 @@ export default function AircraftDetailPage() {
                       </Typography>
                     </Stack>
                     <Typography variant="caption" sx={{ color: pageMuted }}>
-                      {point.altitude_ft
+                      {point.altitude_ft != null
                         ? `${point.altitude_ft.toLocaleString()} ft`
-                        : `${aircraft.altitude_ft.toLocaleString()} ft`}
+                        : aircraft.altitude_ft != null
+                          ? `${aircraft.altitude_ft.toLocaleString()} ft`
+                          : "—"}
                     </Typography>
                   </Box>
                 </Grow>
